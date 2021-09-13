@@ -10,10 +10,13 @@
 
 #include "libs.h"
 
+#define BAD_MALLOC 0
+#define OUT_OF_BOUNDS 1
+
 void throw_fatal_perror(char *errMsg);
 int check_fatal_error(char *errMsg, int retval, int success);
 int check_error(char *errMsg, int retval, int success);
 void throw_fatal_error(int ERROR_CODE);
-void check_bad_alloc(void *mem);
+void* check_bad_alloc(void *mem);
 
 #endif

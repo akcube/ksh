@@ -21,9 +21,11 @@
 #include<sys/wait.h>
 #include<fcntl.h>
 #include<time.h>
+#include<stdint.h>
 
 // Self-defined include files
 #include "error_handlers.h"
 #include "utils.h"
+#include "vector.h"
 
 #endif

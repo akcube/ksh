@@ -1,0 +1,27 @@
+/**
+ * This is the code for a string vector implementation in C. It 
+ * behaves more like the C++ stack DS than the vector. The goal is 
+ * to just implement what is required and not a fully functional
+ * vector. 
+ */
+
+#ifndef __STRING_VECTOR
+#define __STRING_VECTOR
+
+#include "libs.h"
+
+typedef char* string;
+
+typedef struct string_vector{
+	string *arr;
+	uint32_t size;
+	uint32_t table_size;
+} string_vector;
+
+void push_back(string_vector*, string);
+void pop_back(string_vector*);
+string top(string_vector*);
+void createVector(string_vector* v, uint32_t n);
+void destroyVector(string_vector* v);
+
+#endif

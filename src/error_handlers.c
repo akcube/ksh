@@ -8,8 +8,9 @@
 
 #include "error_handlers.h"
 
-const int elist_sz = 1;
-char *c_errlist[1] = {"System out of memory. Malloc failed."};
+const int elist_sz = 2;
+char *c_errlist[2] = { 	"System out of memory. Malloc failed.", 
+						"Out of bounds access on string_vector."};
 
 // Fatal errors exit the process
 void throw_fatal_perror(char *errMsg){
@@ -42,8 +43,14 @@ void throw_fatal_error(int ERROR_CODE){
 	exit(ERROR_CODE);
 }
 
-void check_bad_alloc(void *mem){
-	if(mem==NULL){
+void* check_bad_alloc(void *mem){
+	if(mem==NULL)
 		throw_fatal_error(BAD_MALLOC);
-	}
+	return mem;
+}
+
+void* balloc(size_t bytes){
+	void *ret = malloc(bytes);
+	if(ret==NULL) throw_fatal_error(BAD_MALLOC);
+	return ret;
 }

@@ -14,7 +14,7 @@ typedef struct Shell{
 typedef struct Command{
 	string name;
 	int argc;
-
+	
 } Command;
 
 #endif
