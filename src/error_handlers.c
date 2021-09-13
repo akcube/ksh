@@ -9,7 +9,7 @@
 #include "error_handlers.h"
 
 const int elist_sz = 1;
-char *c_errlist[1];
+char *c_errlist[1] = {"System out of memory. Malloc failed."};
 
 // Fatal errors exit the process
 void throw_fatal_perror(char *errMsg){
@@ -17,20 +17,33 @@ void throw_fatal_perror(char *errMsg){
 	exit(errno);
 }
 
-// Throw error if return code matches error code
-void check_fatal_error(char *errMsg, int retval, int errcode){
-	if(retval==errcode)
+// Throw error if return code does not match success code
+int check_fatal_error(char *errMsg, int retval, int success){
+	if(retval!=success){
 		throw_fatal_perror(errMsg);
+		return 1;
+	}
+	return 0;
 }
 
-void check_error(char *errMsg, int retval, int errcode){
-	if(retval==errcode)
+int check_error(char *errMsg, int retval, int success){
+	if(retval!=success){
 		perror(errMsg);
+		return 1;
+	}
+	return 0;
 }
+
 
 // Handle custom errors
 void throw_fatal_error(int ERROR_CODE){
 	assert(ERROR_CODE >= 0 && ERROR_CODE < elist_sz);
 	puts(c_errlist[ERROR_CODE]);
 	exit(ERROR_CODE);
+}
+
+void check_bad_alloc(void *mem){
+	if(mem==NULL){
+		throw_fatal_error(BAD_MALLOC);
+	}
 }

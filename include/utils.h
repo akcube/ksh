@@ -9,6 +9,8 @@
 
 #include "libs.h"
 
+const static int BAD_MALLOC = 0;
+
 typedef char* string;
 
 void init();
