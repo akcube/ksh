@@ -6,11 +6,14 @@
  * Custom error messages are stored in c_errlist.
  */
 
+#include "libs.h"
 #include "error_handlers.h"
 
-const int elist_sz = 2;
-char *c_errlist[2] = { 	"System out of memory. Malloc failed.", 
-						"Out of bounds access on string_vector."};
+const int elist_sz = 3;
+char *c_errlist[3] = { 	
+						"System out of memory. Malloc failed.", 
+						"Out of bounds access on string_vector.",
+						"Initialization failed."};
 
 // Fatal errors exit the process
 void throw_fatal_perror(char *errMsg){
@@ -19,22 +22,13 @@ void throw_fatal_perror(char *errMsg){
 }
 
 // Throw error if return code does not match success code
-int check_fatal_error(char *errMsg, int retval, int success){
+int check_fatal_perror(char *errMsg, int retval, int success){
 	if(retval!=success){
 		throw_fatal_perror(errMsg);
 		return 1;
 	}
 	return 0;
 }
-
-int check_error(char *errMsg, int retval, int success){
-	if(retval!=success){
-		perror(errMsg);
-		return 1;
-	}
-	return 0;
-}
-
 
 // Handle custom errors
 void throw_fatal_error(int ERROR_CODE){
@@ -43,14 +37,16 @@ void throw_fatal_error(int ERROR_CODE){
 	exit(ERROR_CODE);
 }
 
+int check_fatal_error(int ERROR_CODE, int retval, int success){
+	if(retval!=success){
+		throw_fatal_error(ERROR_CODE);
+		return 1;
+	}
+	return 0;
+}
+
 void* check_bad_alloc(void *mem){
 	if(mem==NULL)
 		throw_fatal_error(BAD_MALLOC);
 	return mem;
-}
-
-void* balloc(size_t bytes){
-	void *ret = malloc(bytes);
-	if(ret==NULL) throw_fatal_error(BAD_MALLOC);
-	return ret;
 }

@@ -8,8 +8,6 @@
 #ifndef __STRING_VECTOR
 #define __STRING_VECTOR
 
-#include "libs.h"
-
 typedef char* string;
 
 typedef struct string_vector{

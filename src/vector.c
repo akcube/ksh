@@ -5,6 +5,7 @@
  * vector. 
  */
 
+#include "libs.h"
 #include "vector.h"
 
 /**

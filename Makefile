@@ -1,7 +1,7 @@
 IDIR=include
 SDIR=src
 CC=gcc
-CFLAGS=-I$(IDIR)
+CFLAGS=-I$(IDIR) -Wall -Werror
 
 ODIR=$(SDIR)/obj
 LDIR =lib

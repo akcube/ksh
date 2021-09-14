@@ -18,6 +18,8 @@
 #include<unistd.h>
 #include<sys/stat.h>
 #include<sys/types.h>
+#include<pwd.h>
+#include<limits.h>
 #include<sys/wait.h>
 #include<fcntl.h>
 #include<time.h>
@@ -27,5 +29,6 @@
 #include "error_handlers.h"
 #include "utils.h"
 #include "vector.h"
+#include "shell.h"
 
 #endif

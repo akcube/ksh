@@ -7,11 +7,9 @@
 #ifndef __SHELL_UTILS
 #define __SHELL_UTILS
 
-#include "libs.h"
-
 typedef char* string;
 
 void init();
-
+void prompt();
 
 #endif
