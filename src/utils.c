@@ -30,6 +30,23 @@ string get_cwd(){
     return cwd;
 }
 
+string get_prompt_dir(){
+    bool match = true;
+    uint32_t len = 0;
+    char *promptdir = check_bad_alloc(strdup(KSH.curdir));
+    for(char *a=KSH.curdir, *b=KSH.homedir; *a != '\0' && *b != '\0'; a++, b++){
+        if(*a != *b) match = false;
+        len++;
+    }
+    if(match && KSH.curdir[len] == '\0'){
+        promptdir[len-1] = '~';
+        string prefixed = check_bad_alloc(strdup(&promptdir[len-1]));
+        free(promptdir);
+        return prefixed;
+    }
+    else return promptdir;
+}
+
 /**
  * @brief Initializes all global dependencies of the shell
  * @details Clears screen, sets up home directory & sets up history tracking
@@ -45,19 +62,9 @@ void init(){
     KSH.homedir = get_cwd();
     KSH.curdir = get_cwd();
     KSH.lastdir = get_cwd();
+    KSH.promptdir = get_prompt_dir();
 }
 
 void prompt(){
-    bool match = true;
-    uint32_t len = 0;
-    char *promptdir = check_bad_alloc(strdup(KSH.curdir));
-    for(char *a=KSH.curdir, *b=KSH.homedir; *a != '\0' && *b != '\0'; a++, b++){
-        if(*a != *b) match = false;
-        len++;
-    }
-    
-    if(match && KSH.curdir[len] == '\0') promptdir[len-1] = '~';
-    else len = 1;
-    
-    printf("<%s@%s:%s>", KSH.username, KSH.hostname, promptdir+len-1);
+    printf("<%s@%s:%s>", KSH.username, KSH.hostname, KSH.promptdir);
 }

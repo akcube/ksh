@@ -11,5 +11,6 @@ typedef char* string;
 
 void init();
 void prompt();
+string get_cwd();
 
 #endif

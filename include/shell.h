@@ -14,6 +14,7 @@ typedef struct Shell{
 	string homedir;
 	string curdir;
 	string lastdir;
+	string promptdir;
 	uid_t uid;
 } Shell;
 
