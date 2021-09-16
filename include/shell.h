@@ -21,7 +21,7 @@ typedef struct Shell{
 typedef struct Command{
 	string name;
 	int argc;
-	// string_vector argv;
+	string_vector argv;
 	bool runInBackground;
 } Command;
 

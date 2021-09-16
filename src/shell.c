@@ -5,6 +5,7 @@
 #include "shell.h"
 
 int main(int argc, char *argv[]){
+
 	init();
-    prompt();
+    while(prompt());
 }

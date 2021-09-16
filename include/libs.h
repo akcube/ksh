@@ -30,5 +30,6 @@
 #include "utils.h"
 #include "vector.h"
 #include "shell.h"
+#include "prompt.h"
 
 #endif

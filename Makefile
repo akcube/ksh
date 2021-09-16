@@ -1,7 +1,7 @@
 IDIR=include
 SDIR=src
 CC=gcc
-CFLAGS=-I$(IDIR) -Wall -Werror
+CFLAGS=-I$(IDIR) -Wall -Werror -D DEBUG
 
 ODIR=$(SDIR)/obj
 LDIR =lib
@@ -9,12 +9,12 @@ LDIR =lib
 LIBS=-lm -lncurses
 
 # Add .h include files here
-_DEPS = libs.h error_handlers.h utils.h vector.h
+_DEPS = libs.h error_handlers.h utils.h vector.h prompt.h
 
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
 # Add .o include file deps here
-_OBJ = error_handlers.o utils.o shell.o vector.o
+_OBJ = error_handlers.o utils.o shell.o vector.o prompt.o
 
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 

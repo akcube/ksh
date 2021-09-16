@@ -21,9 +21,9 @@ void throw_fatal_perror(char *errMsg){
 	exit(errno);
 }
 
-// Throw error if return code does not match success code
-int check_fatal_perror(char *errMsg, int retval, int success){
-	if(retval!=success){
+// Throw error if return code does match error code
+int check_fatal_perror(char *errMsg, int retval, int error){
+	if(retval==error){
 		throw_fatal_perror(errMsg);
 		return 1;
 	}
@@ -37,8 +37,8 @@ void throw_fatal_error(int ERROR_CODE){
 	exit(ERROR_CODE);
 }
 
-int check_fatal_error(int ERROR_CODE, int retval, int success){
-	if(retval!=success){
+int check_fatal_error(int ERROR_CODE, int retval, int error){
+	if(retval==error){
 		throw_fatal_error(ERROR_CODE);
 		return 1;
 	}

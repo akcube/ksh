@@ -30,6 +30,11 @@ string get_cwd(){
     return cwd;
 }
 
+/**
+ * @brief Returns the shell prompt path relative to home
+ * @details Attempts to match prefix of cwd with home path. If there is complete
+ * match, the home prefix is substituted with '~'
+ */
 string get_prompt_dir(){
     bool match = true;
     uint32_t len = 0;
@@ -39,6 +44,7 @@ string get_prompt_dir(){
         len++;
     }
     if(match && KSH.curdir[len] == '\0'){
+        assert(len>=1);
         promptdir[len-1] = '~';
         string prefixed = check_bad_alloc(strdup(&promptdir[len-1]));
         free(promptdir);
@@ -53,18 +59,23 @@ string get_prompt_dir(){
  */
 void init(){
 	
-	clrscr(); 
+	clrscr(); // Clear terminal
 
+    // Fill in all the details of our global shell state variable
     KSH.uid = getuid();
     KSH.username = check_bad_alloc(strdup(getpwuid(KSH.uid)->pw_name));
     KSH.hostname = check_bad_alloc(malloc((HOST_NAME_MAX+1)*sizeof(char)));
-    check_fatal_error(INIT_FAILED, gethostname(KSH.hostname, HOST_NAME_MAX+1), 0);
+    check_fatal_error(INIT_FAILED, gethostname(KSH.hostname, HOST_NAME_MAX+1), -1);
     KSH.homedir = get_cwd();
     KSH.curdir = get_cwd();
     KSH.lastdir = get_cwd();
     KSH.promptdir = get_prompt_dir();
 }
 
-void prompt(){
-    printf("<%s@%s:%s>", KSH.username, KSH.hostname, KSH.promptdir);
+/**
+ * @brief Initialize all the fields of a Command struct
+ * @param Pointer to the struct we want to initialize
+ */
+void init_command(Command *command){
+    
 }

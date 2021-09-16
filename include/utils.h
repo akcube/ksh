@@ -10,7 +10,7 @@
 typedef char* string;
 
 void init();
-void prompt();
 string get_cwd();
+string get_prompt_dir();
 
 #endif
