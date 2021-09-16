@@ -31,5 +31,6 @@
 #include "vector.h"
 #include "shell.h"
 #include "prompt.h"
+#include "parsing.h"
 
 #endif

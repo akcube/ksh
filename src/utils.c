@@ -71,11 +71,3 @@ void init(){
     KSH.lastdir = get_cwd();
     KSH.promptdir = get_prompt_dir();
 }
-
-/**
- * @brief Initialize all the fields of a Command struct
- * @param Pointer to the struct we want to initialize
- */
-void init_command(Command *command){
-    
-}

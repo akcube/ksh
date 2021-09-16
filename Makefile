@@ -9,12 +9,12 @@ LDIR =lib
 LIBS=-lm -lncurses
 
 # Add .h include files here
-_DEPS = libs.h error_handlers.h utils.h vector.h prompt.h
+_DEPS = libs.h error_handlers.h utils.h vector.h prompt.h parsing.h
 
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
 # Add .o include file deps here
-_OBJ = error_handlers.o utils.o shell.o vector.o prompt.o
+_OBJ = error_handlers.o utils.o shell.o vector.o prompt.o parsing.o
 
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 

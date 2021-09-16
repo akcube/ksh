@@ -1,26 +1,6 @@
 #include "libs.h"
 #include "prompt.h"
 
-void parse(char *linebuf){
-
-	char *delim = ";&";
-	char *saveptr_p, *saveptr_c;
-	char *top = strtok_r(linebuf, delim, &saveptr_p);
-
-	Command command;
-
-	for(;top!=NULL; top=strtok_r(NULL, delim, &saveptr_p)){
-		
-		init_command(&command);
-		char *token = strtok_r(command, " ", &saveptr_c);
-
-		for(;token!=NULL; token=strtok_r(NULL, " ", &saveptr_c)){
-
-		}
-	}
-
-}
-
 int prompt(){
 	// Setup vars
 	string linebuf = NULL;

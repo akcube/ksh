@@ -52,7 +52,7 @@ void pop_back(string_vector* v){
 /**
  * @brief Creates the vector and initializes array + state vars
  */
-void createVector(string_vector* v, uint32_t n){
+void create_vector(string_vector* v, uint32_t n){
     v->arr = (string*) check_bad_alloc(malloc(sizeof(string)*n));
     v->size = 0;
     v->table_size = n;
@@ -61,7 +61,7 @@ void createVector(string_vector* v, uint32_t n){
 /**
  * @brief Frees all alloc'd memory and cleans up
  */
-void destroyVector(string_vector *v){
+void destroy_vector(string_vector *v){
     for(int i=0; i<v->size; i++)
         free(v->arr[i]);
     free(v->arr);
