@@ -14,6 +14,12 @@ bool is_builtin(char *name){
 	return false;
 }
 
+/**
+ * @brief Execute a builtin command
+ *
+ * @param c MUST be a builtin command, or will sigsev. Check with is_builtin first.
+ * @return Returns 0 on successful execution. -1 on failure.
+ */
 int exec_builtin(Command c){
 	char **builtin = builtins;
 	int ret = -1;
@@ -32,6 +38,14 @@ int cd(Command c){
 	else {
 		replace_tilda(&(c.argv.arr[1]));
 		newpath = c.argv.arr[1];
+	}
+
+	if(strlen(newpath)==1 && newpath[0]=='-'){
+		chdir(KSH.lastdir);
+		swapstring(&KSH.lastdir, &KSH.curdir);
+		free(KSH.promptdir);
+		KSH.promptdir = get_prompt_dir();
+		return 0;
 	}
 
 	struct stat sb;

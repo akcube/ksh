@@ -21,6 +21,15 @@
 Shell KSH;
 
 /**
+ * @brief Swap two strings
+ */
+void swapstring(string *a, string *b){
+    string temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+/**
  * @brief Returns a pointer to a string containing cwd
  * @return String: cwd. Caller must free.
  */

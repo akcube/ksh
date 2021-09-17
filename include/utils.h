@@ -16,5 +16,6 @@ void init();
 string get_cwd();
 string get_prompt_dir();
 void replace_tilda(string *path_adr);
+void swapstring(string *a, string *b);
 
 #endif
