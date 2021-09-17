@@ -2,7 +2,7 @@
 #include "builtins.h"
 
 char *builtins[] = {"cd", "pwd", "ls", NULL};
-int (*jumptable[])(Command c) = {cd};
+int (*jumptable[])(Command c) = {cd, pwd};
 
 /**
  * @brief Check if the command is a builtin command
@@ -28,18 +28,41 @@ int exec_builtin(Command c){
 	return ret;
 }
 
+/**
+ * @brief Builtin implementation of pwd
+ * @return 0 on success. -1 on failure.
+ */
+int pwd(Command c){
+	// pwd should have no arguments
+	if(c.argc > 0){
+		throw_error(TOO_MANY_ARGS);
+		return -1;
+	}
+	puts(KSH.curdir);
+	return 0;
+}
+
+/**
+ * @brief Builtin implementation of cd
+ * @details Considers the dir the shell was started in as home dir
+ *
+ * @return 0 on success. -1 on failure.
+ */
 int cd(Command c){
+	// cd with more than 1 arg is incorrect usage
 	if(c.argc>1){
 		throw_error(TOO_MANY_ARGS);
 		return -1;
 	}
+
 	string newpath;
-	if(c.argc==0) newpath = KSH.homedir;
+	if(c.argc==0) newpath = KSH.homedir; // Just cd should cd to home dir
 	else {
-		replace_tilda(&(c.argv.arr[1]));
+		replace_tilda(&(c.argv.arr[1])); // Get absolute path 
 		newpath = c.argv.arr[1];
 	}
 
+	// Handle the `cd -` case. Should switch to prev directory
 	if(strlen(newpath)==1 && newpath[0]=='-'){
 		chdir(KSH.lastdir);
 		swapstring(&KSH.lastdir, &KSH.curdir);
@@ -48,6 +71,7 @@ int cd(Command c){
 		return 0;
 	}
 
+	// Error check if valid path & then make sure it is a directory
 	struct stat sb;
 	if(check_perror("cd", stat(newpath, &sb), -1)) return -1;
 	if(!S_ISDIR(sb.st_mode)){
@@ -55,6 +79,7 @@ int cd(Command c){
 		return -1;
 	}
 
+	// Update global shell state
 	free(KSH.lastdir);
 	free(KSH.promptdir);
 	KSH.lastdir = KSH.curdir;

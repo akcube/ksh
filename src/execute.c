@@ -34,18 +34,18 @@ int execute(Command c){
 
 				// Ignore TTIN & TTOUT signals while it is in foreground & give it foreground gpid
 				signal(SIGTTIN, SIG_IGN);
-	            signal(SIGTTOU, SIG_IGN);	
-	            tcsetpgrp(0, pid);
+				signal(SIGTTOU, SIG_IGN);	
+				tcsetpgrp(0, pid);
 
-	            // Wait for termination
-	            waitpid(pid, &status, WUNTRACED);
+				// Wait for termination
+				waitpid(pid, &status, WUNTRACED);
 
-	            // Set parent back to foreground process gid
-	            tcsetpgrp(0, getpgid(0));	
+				// Set parent back to foreground process gid
+				tcsetpgrp(0, getpgid(0));	
 
-	            // Set TTIN & TTOUT handlers back to default
-	            signal(SIGTTIN, SIG_DFL);
-	            signal(SIGTTOU, SIG_DFL);
+				// Set TTIN & TTOUT handlers back to default
+				signal(SIGTTIN, SIG_DFL);
+				signal(SIGTTOU, SIG_DFL);
 			}
 		}
 		return 1;

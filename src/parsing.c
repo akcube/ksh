@@ -35,8 +35,8 @@ void destroy_command(Command *command){
  */
 void parse_args(Command *command, string argstr){
     char *saveptr;
-    char *token = strtok_r(argstr, " ", &saveptr);
-    for(;token!=NULL; token=strtok_r(NULL, " ", &saveptr)){
+    char *token = strtok_r(argstr, " \t", &saveptr);
+    for(;token!=NULL; token=strtok_r(NULL, " \t", &saveptr)){
         push_back(&(command->argv), token);
         command->argc++;
     }
