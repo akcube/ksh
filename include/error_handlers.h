@@ -11,11 +11,15 @@
 #define BAD_MALLOC 0
 #define OUT_OF_BOUNDS 1
 #define INIT_FAILED 2
+#define FORK_FAIL 3
+#define EXEC_FAIL 4
 
 void throw_fatal_perror(char *errMsg);
 int check_fatal_perror(char *errMsg, int retval, int success);
-int check_error(char *errMsg, int retval, int success);
+int check_error(int ERROR_CODE, int retval, int success);
+int check_perror(char *errMsg, int retval, int success);
 void throw_fatal_error(int ERROR_CODE);
+void throw_error(int ERROR_CODE);
 int check_fatal_error(int ERROR_CODE, int retval, int success);
 void* check_bad_alloc(void *mem);
 

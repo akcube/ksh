@@ -9,6 +9,9 @@
 
 typedef char* string;
 
+#define ISPARENT(X) X
+#define ISCHILD(X) !X
+
 void init();
 string get_cwd();
 string get_prompt_dir();

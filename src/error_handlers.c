@@ -9,11 +9,13 @@
 #include "libs.h"
 #include "error_handlers.h"
 
-const int elist_sz = 3;
-char *c_errlist[3] = { 	
+const int elist_sz = 5;
+char *c_errlist[5] = { 	
 						"System out of memory. Malloc failed.", 
 						"Out of bounds access on string_vector.",
-						"Initialization failed."};
+						"Initialization failed.",
+						"Fork failed.",
+						"Exec failed"};
 
 // Fatal errors exit the process
 void throw_fatal_perror(char *errMsg){
@@ -30,6 +32,14 @@ int check_fatal_perror(char *errMsg, int retval, int error){
 	return 0;
 }
 
+int check_perror(char *errMsg, int retval, int error){
+	if(retval==error){
+		perror(errMsg);
+		return 1;
+	}
+	return 0;
+}
+
 // Handle custom errors
 void throw_fatal_error(int ERROR_CODE){
 	assert(ERROR_CODE >= 0 && ERROR_CODE < elist_sz);
@@ -37,9 +47,22 @@ void throw_fatal_error(int ERROR_CODE){
 	exit(ERROR_CODE);
 }
 
+void throw_error(int ERROR_CODE){
+	assert(ERROR_CODE >= 0 && ERROR_CODE < elist_sz);
+	puts(c_errlist[ERROR_CODE]);
+}
+
 int check_fatal_error(int ERROR_CODE, int retval, int error){
 	if(retval==error){
 		throw_fatal_error(ERROR_CODE);
+		return 1;
+	}
+	return 0;
+}
+
+int check_error(int ERROR_CODE, int retval, int error){
+	if(retval==error){
+		throw_error(ERROR_CODE);
 		return 1;
 	}
 	return 0;

@@ -22,10 +22,11 @@ void vec_resize(string_vector* v, uint32_t tab_size){
  * the size of the string for strdup however.
  */
 void push_back(string_vector* v, string data){
-    if(v->size == v->table_size)
+    if(v->size == v->table_size-1)
         vec_resize(v, (v->table_size<<1));
 
     v->arr[v->size++] = check_bad_alloc(strdup(data));
+    v->arr[v->size] = NULL;
 }
 
 /**
@@ -44,8 +45,9 @@ void pop_back(string_vector* v){
     
     v->size--;
     free(v->arr[v->size]);
+    v->arr[v->size] = NULL;
 
-    if(v->size <= (v->table_size)>>2)
+    if((v->size+1) <= (v->table_size)>>2)
         vec_resize(v, v->table_size>>1);
 }
 
@@ -53,7 +55,7 @@ void pop_back(string_vector* v){
  * @brief Creates the vector and initializes array + state vars
  */
 void create_vector(string_vector* v, uint32_t n){
-    v->arr = (string*) check_bad_alloc(malloc(sizeof(string)*n));
+    v->arr = (string*) check_bad_alloc(calloc(n, sizeof(string)));
     v->size = 0;
     v->table_size = n;
 }

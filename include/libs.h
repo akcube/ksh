@@ -32,5 +32,7 @@
 #include "shell.h"
 #include "prompt.h"
 #include "parsing.h"
+#include "execute.h"
+#include "builtins.h"
 
 #endif
