@@ -1,8 +1,8 @@
 #include "libs.h"
 #include "builtins.h"
 
-char *builtins[] = {"cd", "pwd", "ls", NULL};
-int (*jumptable[])(Command c) = {cd, pwd};
+char *builtins[] = {"cd", "pwd", "echo", "ls", NULL};
+int (*jumptable[])(Command c) = {cd, pwd, echo};
 
 /**
  * @brief Check if the command is a builtin command
@@ -26,6 +26,20 @@ int exec_builtin(Command c){
 	for(int id=0;(*builtin)!=NULL; builtin++, id++)
 		if(!strcmp(c.name, *builtin)) ret = (*jumptable[id])(c);
 	return ret;
+}
+
+
+/**
+ * @brief Builtin implementation of echo
+ * @details Does not treat quotes / escape sequence characters specially. Yet.
+ * 
+ * @return Returns 0 on success. -1 on failure.
+ */
+int echo(Command c){
+	for(int i=1; i<=c.argc; i++)
+		check_error(PRINTF_FAIL, printf("%s ", c.argv.arr[i]), -1);
+	check_error(PRINTF_FAIL, printf("\n"), -1);
+	return 0;
 }
 
 /**

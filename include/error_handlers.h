@@ -14,6 +14,7 @@
 #define FORK_FAIL 3
 #define EXEC_FAIL 4
 #define TOO_MANY_ARGS 5
+#define PRINTF_FAIL 6
 
 void throw_fatal_perror(char *errMsg);
 int check_fatal_perror(char *errMsg, int retval, int success);

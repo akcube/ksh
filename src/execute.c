@@ -16,14 +16,14 @@ int execute(Command c){
 	if(!is_builtin(c.name)){
 		pid_t pid = fork();
 
-		if(check_error(FORK_FAIL, pid, -1));
+		if(check_error(FORK_FAIL, pid, -1)) return -1;
 
 		// Create process group for child and execute program
 		if(ISCHILD(pid)){
 			setpgid(0, 0);
 			if(c.runInBackground) printf("%d\n", getpid());
 			execvp(c.name, c.argv.arr);
-			throw_error(EXEC_FAIL);
+			throw_fatal_error(EXEC_FAIL);
 		}
 		else{
 			// If foreground process
