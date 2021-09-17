@@ -48,8 +48,9 @@ int execute(Command c){
 	            signal(SIGTTOU, SIG_DFL);
 			}
 		}
-
 		return 1;
 	}
-	return 0;
+	else{
+		return exec_builtin(c);
+	}
 }

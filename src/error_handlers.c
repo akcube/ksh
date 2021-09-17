@@ -9,13 +9,14 @@
 #include "libs.h"
 #include "error_handlers.h"
 
-const int elist_sz = 5;
-char *c_errlist[5] = { 	
+const int elist_sz = 6;
+char *c_errlist[6] = { 	
 						"System out of memory. Malloc failed.", 
 						"Out of bounds access on string_vector.",
 						"Initialization failed.",
 						"Fork failed.",
-						"Exec failed"};
+						"Exec failed",
+						"Too many arguments passed to function"};
 
 // Fatal errors exit the process
 void throw_fatal_perror(char *errMsg){

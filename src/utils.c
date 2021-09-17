@@ -43,7 +43,7 @@ string get_prompt_dir(){
         if(*a != *b) match = false;
         len++;
     }
-    if(match && KSH.curdir[len] == '\0'){
+    if(match && KSH.homedir[len] == '\0'){
         assert(len>=1);
         promptdir[len-1] = '~';
         string prefixed = check_bad_alloc(strdup(&promptdir[len-1]));
@@ -51,6 +51,23 @@ string get_prompt_dir(){
         return prefixed;
     }
     else return promptdir;
+}
+
+/**
+ * @brief Replace the ~ in relative paths to absolute path
+ * @details Given the address of the pointer, it does the replacement and reallocs
+ * memory as required
+ */
+void replace_tilda(string *path_adr){
+    string path = *path_adr;
+    if(path[0]=='~'){
+        int MAXLEN = strlen(path)+strlen(KSH.homedir)+1;
+        string dup = check_bad_alloc(strdup(path));
+        *path_adr = realloc(path, MAXLEN);
+        strcpy(*path_adr, KSH.homedir);
+        strcat(*path_adr, dup+1);
+        free(dup);
+    }
 }
 
 /**
