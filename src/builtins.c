@@ -46,11 +46,17 @@ void __printdir_dfl(DIR *d, uint8_t flags){
 	errno = 0; // Set errno to 0 so we can distinguish between end of stream and error
 	// Print all files in directory
 	struct dirent *dir;
+	string_vector list;
+	create_vector(&list, 4);
 	while((dir = readdir(d))){
 		if(IGNORE(dir->d_name, flags)) continue;
-		if(printf("%s  ", dir->d_name) < 0) throw_error(PRINTF_FAIL);
+		push_back(&list, dir->d_name);
 	}
 	if(errno) perror("ls");
+	for(int i=0; i<list.size; i++)
+		if(printf("%s  ", list.arr[i]) < 0) 
+			throw_error(PRINTF_FAIL);
+	destroy_vector(&list);
 }
 
 /**
@@ -61,7 +67,7 @@ void __printdir_dfl(DIR *d, uint8_t flags){
  * @param flags bitmask for the -a flag. Portable to more. 
  */
 void __printdir_list(DIR *d, uint8_t flags){
-
+		
 }
 
 int ls(Command c){
@@ -141,6 +147,7 @@ int ls(Command c){
 
 		// Cleanup & handle errors
 		if(printf("\n") < 0) throw_error(PRINTF_FAIL);
+		if(i!=directories.size-1) if(printf("\n") < 0) throw_error(PRINTF_FAIL);
 		if(check_perror("ls", closedir(d), -1)) continue;
 	}
 

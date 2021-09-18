@@ -40,6 +40,8 @@ void parse_args(Command *command, string argstr){
         push_back(&(command->argv), token);
         command->argc++;
     }
+    if(!is_builtin(command->name))
+        push_back(&(command->argv), NULL);
 }
 
 /**
