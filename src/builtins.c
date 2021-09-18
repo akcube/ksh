@@ -35,11 +35,41 @@ int exec_builtin(Command c){
 #define LIST_FORMAT(X) (X & BIT_L)
 #define IGNORE(X, FLAG) (!INCLUDE_HIDDEN(FLAG) && X[0]=='.')
 
+/**
+ * @brief The default ls command
+ * @details Can handle the -a flag. Does NOT handle list format.
+ * 
+ * @param dirname Path to directory we're printing
+ * @param flags bitmask for the -a flag. Portable to more. 
+ */
+void __printdir_dfl(char *dirname, uint8_t flags){
+	// Open directory
+	DIR *d;
+	if(check_perror("ls", (long long) (d = opendir(dirname)), 0)) return;
+	struct dirent *dir;
+	
+	errno = 0; // Set errno to 0 so we can distinguish between end of stream and error
+	// Print all files in directory
+	while((dir = readdir(d))){
+		if(IGNORE(dir->d_name, flags)) continue;
+		if(printf("%s  ", dir->d_name) < 0) throw_error(PRINTF_FAIL);
+	}
+	if(printf("\n") < 0) throw_error(PRINTF_FAIL);
+
+	// Handle errors
+	if(errno) perror("ls");
+}
+
+void __printdir_list(char *dirname, uint8_t flags){
+	
+}
+
 int ls(Command c){
 	// Init command state vars
 	uint8_t flags = 0;
 	string_vector directories;
 	create_vector(&directories, 2);
+	int dirs_received = 0;
 
 	// Parse Arguments
 	for(int i=1; i<=c.argc; i++){
@@ -61,18 +91,51 @@ int ls(Command c){
 				}
 			}
 		}
-		// If not a flag argument, it must be a directory. Populate dir vector
+		// If not a flag argument, it must be a directory.
 		else{
+			dirs_received++;
+			int W_SZ = 20; // => strlen("ls: cannot access ''")
+			
+			// TODO: Optimize this so I don't have to malloc for every directory
+			// Can malloc once for buf and realloc for appending only when necessary
+			// Constant prefix so just overwrite suffix from constant offset.
+			string buf = malloc(strlen(c.argv.arr[i]) + W_SZ + 1);
+			if(sprintf(buf, "ls: cannot access '%s'", c.argv.arr[i]) < 0){
+				throw_error(PRINTF_FAIL); free(buf);
+				return -1;
+			}
+			// If given path is not a directory we can open, write error to terminal
+			DIR *tmp;
+			if(check_perror(buf, (long long) (tmp = opendir(c.argv.arr[i])), 0)){
+				free(buf); continue;
+			}
+			free(buf);
+			if(check_perror("ls", closedir(tmp), -1)) continue;
+			// Valid directory, populate directory vector
 			push_back(&directories, c.argv.arr[i]);
 		}
 	}
 
+	// If no directories specified, ls on cwd
+	if(dirs_received == 0) push_back(&directories, ".");
+
 	// Iterate over all directories
 	for(int i=0; i<directories.size; i++){
-		if(IGNORE(directories.arr[i], flags)) continue;
-
+		// If multiple directories, print directory name
+		if(directories.size > 1){
+			if(printf("%s:\n", directories.arr[i]) < 0){
+				throw_error(PRINTF_FAIL);
+				return -1;
+			}
+		}
+		// Print directory contents
+		if(!LIST_FORMAT(flags))
+			__printdir_dfl(directories.arr[i], flags);
+		else 
+			__printdir_list(directories.arr[i], flags);
 	}
 
+	// Cleanup
 	destroy_vector(&directories);
 	return 0;
 }

@@ -35,7 +35,7 @@ int check_fatal_perror(char *errMsg, int retval, int error){
 	return 0;
 }
 
-int check_perror(char *errMsg, int retval, int error){
+int check_perror(char *errMsg, long long retval, long long error){
 	if(retval==error){
 		perror(errMsg);
 		return 1;

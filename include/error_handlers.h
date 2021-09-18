@@ -20,7 +20,7 @@
 void throw_fatal_perror(char *errMsg);
 int check_fatal_perror(char *errMsg, int retval, int success);
 int check_error(int ERROR_CODE, int retval, int success);
-int check_perror(char *errMsg, int retval, int success);
+int check_perror(char *errMsg, long long retval, long long success);
 void throw_fatal_error(int ERROR_CODE);
 void throw_error(int ERROR_CODE);
 int check_fatal_error(int ERROR_CODE, int retval, int success);

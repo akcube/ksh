@@ -24,6 +24,7 @@
 #include<fcntl.h>
 #include<time.h>
 #include<stdint.h>
+#include<dirent.h>
 
 // Self-defined include files
 #include "error_handlers.h"
