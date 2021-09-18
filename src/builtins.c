@@ -2,7 +2,7 @@
 #include "builtins.h"
 
 char *builtins[] = {"cd", "pwd", "echo", "ls", NULL};
-int (*jumptable[])(Command c) = {cd, pwd, echo};
+int (*jumptable[])(Command c) = {cd, pwd, echo, ls};
 
 /**
  * @brief Check if the command is a builtin command
@@ -13,6 +13,7 @@ bool is_builtin(char *name){
 		if(!strcmp(name, *builtin)) return true;
 	return false;
 }
+
 
 /**
  * @brief Execute a builtin command
@@ -28,6 +29,53 @@ int exec_builtin(Command c){
 	return ret;
 }
 
+#define BIT_A (1<<0)
+#define BIT_L (1<<1)
+#define INCLUDE_HIDDEN(X) (X & BIT_A)
+#define LIST_FORMAT(X) (X & BIT_L)
+#define IGNORE(X, FLAG) (!INCLUDE_HIDDEN(FLAG) && X[0]=='.')
+
+int ls(Command c){
+	// Init command state vars
+	uint8_t flags = 0;
+	string_vector directories;
+	create_vector(&directories, 2);
+
+	// Parse Arguments
+	for(int i=1; i<=c.argc; i++){
+		// If flag argument
+		if(c.argv.arr[i][0] == '-'){
+			// Iterate over all flags 
+			for(char *ptr = c.argv.arr[i] + 1; *ptr; ptr++){
+				// Set appropriate bit per flag / throw error
+				switch(*ptr){
+					case 'l':
+						flags |= BIT_L;
+					break;
+					case 'a':
+						flags |= BIT_A;
+					break;
+					default:
+						throw_error(BAD_FLAGS);
+						return -1;
+				}
+			}
+		}
+		// If not a flag argument, it must be a directory. Populate dir vector
+		else{
+			push_back(&directories, c.argv.arr[i]);
+		}
+	}
+
+	// Iterate over all directories
+	for(int i=0; i<directories.size; i++){
+		if(IGNORE(directories.arr[i], flags)) continue;
+
+	}
+
+	destroy_vector(&directories);
+	return 0;
+}
 
 /**
  * @brief Builtin implementation of echo

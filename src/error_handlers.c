@@ -9,15 +9,16 @@
 #include "libs.h"
 #include "error_handlers.h"
 
-const int elist_sz = 7;
-char *c_errlist[7] = { 	
-						"System out of memory. Malloc failed.", 
-						"Out of bounds access on string_vector.",
-						"Initialization failed.",
-						"Fork failed.",
-						"Exec failed",
-						"Too many arguments passed to function",
-						"Unexpected printf failure."};
+const int elist_sz = 8;
+char *c_errlist[8] = { 	
+						"Error: System out of memory. Malloc failed.", 
+						"Error: Out of bounds access on string_vector.",
+						"KSH: Initialization failed.",
+						"Error: Fork failed.",
+						"KSH: Command not found",
+						"KSH: Too many arguments passed to function",
+						"Error: Unexpected printf failure.",
+						"KSH: Incorrect flags passed to program."};
 
 // Fatal errors exit the process
 void throw_fatal_perror(char *errMsg){
