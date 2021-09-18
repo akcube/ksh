@@ -39,29 +39,29 @@ int exec_builtin(Command c){
  * @brief The default ls command
  * @details Can handle the -a flag. Does NOT handle list format.
  * 
- * @param dirname Path to directory we're printing
+ * @param d DIR* Pointer to the directory stream of the directory to print
  * @param flags bitmask for the -a flag. Portable to more. 
  */
-void __printdir_dfl(char *dirname, uint8_t flags){
-	// Open directory
-	DIR *d;
-	if(check_perror("ls", (long long) (d = opendir(dirname)), 0)) return;
-	struct dirent *dir;
-	
+void __printdir_dfl(DIR *d, uint8_t flags){
 	errno = 0; // Set errno to 0 so we can distinguish between end of stream and error
 	// Print all files in directory
+	struct dirent *dir;
 	while((dir = readdir(d))){
 		if(IGNORE(dir->d_name, flags)) continue;
 		if(printf("%s  ", dir->d_name) < 0) throw_error(PRINTF_FAIL);
 	}
-	if(printf("\n") < 0) throw_error(PRINTF_FAIL);
-
-	// Handle errors
 	if(errno) perror("ls");
 }
 
-void __printdir_list(char *dirname, uint8_t flags){
-	
+/**
+ * @brief ls -l print command
+ * @details Can handle the -a flag. Handles list format
+ * 
+ * @param d DIR* Pointer to the directory stream of the directory to print
+ * @param flags bitmask for the -a flag. Portable to more. 
+ */
+void __printdir_list(DIR *d, uint8_t flags){
+
 }
 
 int ls(Command c){
@@ -128,11 +128,20 @@ int ls(Command c){
 				return -1;
 			}
 		}
+
+		// Open directory
+		DIR *d;
+		if(check_perror("ls", (long long) (d = opendir(directories.arr[i])), 0)) continue;
+
 		// Print directory contents
 		if(!LIST_FORMAT(flags))
-			__printdir_dfl(directories.arr[i], flags);
+			__printdir_dfl(d, flags);
 		else 
-			__printdir_list(directories.arr[i], flags);
+			__printdir_list(d, flags);
+
+		// Cleanup & handle errors
+		if(printf("\n") < 0) throw_error(PRINTF_FAIL);
+		if(check_perror("ls", closedir(d), -1)) continue;
 	}
 
 	// Cleanup
