@@ -16,7 +16,7 @@
 #define TOO_MANY_ARGS 5
 #define PRINTF_FAIL 6
 #define BAD_FLAGS 7
-#define UNKNOWN_FILE_TYPE 8
+#define TOO_LESS_ARGS 8
 
 void throw_fatal_perror(char *errMsg);
 int check_fatal_perror(char *errMsg, int retval, int success);

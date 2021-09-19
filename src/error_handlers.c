@@ -18,8 +18,8 @@ char *c_errlist[9] = {
 						"KSH: Command not found",
 						"KSH: Too many arguments passed to function",
 						"Error: Unexpected printf failure.",
-						"KSH: Incorrect flags passed to program."
-						"KSH: Unknown file type encountered and had to quit."};
+						"KSH: Incorrect flags passed to program.",
+						"KSH: Not enough arguments provided."};
 
 // Fatal errors exit the process
 void throw_fatal_perror(char *errMsg){

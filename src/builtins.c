@@ -1,8 +1,8 @@
 #include "libs.h"
 #include "builtins.h"
 
-char *builtins[] = {"cd", "pwd", "echo", "ls", NULL};
-int (*jumptable[])(Command *c) = {cd, pwd, echo, ls};
+char *builtins[] = {"cd", "pwd", "echo", "ls", "repeat", NULL};
+int (*jumptable[])(Command *c) = {cd, pwd, echo, ls, repeat};
 
 /**
  * @brief Check if the command is a builtin command
@@ -14,6 +14,42 @@ bool is_builtin(char *name){
 	return false;
 }
 
+/**
+ * @brief Repeats the command given to it 'n' times
+ * 
+ * @return -1 on failure. 0 on success.
+ */
+int repeat(Command *c){
+	// Usage: repeat 'n' command-name args...
+	if(c->argc <= 1){
+		throw_error(TOO_LESS_ARGS);
+		return -1;
+	}
+	// Convert 'n' to int type
+	int64_t n = string_to_int(c->argv.arr[1]);
+	// Cannot repeat < 0 times
+	if(n <= 0){
+		puts("Please provide a valid integer > 0 after repeat");
+		return 0;
+	}
+	
+	// Obtain comand to be repeated from args passed to repeat
+	Command package;
+	init_command(&package, c->argv.arr[2]);
+	for(int i=3; i<=c->argc; i++){
+		push_back(&(package.argv), c->argv.arr[i]);
+		package.argc++;
+	}
+	if(!is_builtin(package.name)) push_back(&(package.argv), NULL);
+
+	// Execute the command in a loop n times
+	for(int i=0; i<n; i++)
+		execute(&package);
+
+	// Cleanup
+	destroy_command(&package);
+	return 0;
+}
 
 /**
  * @brief Execute a builtin command

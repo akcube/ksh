@@ -30,6 +30,21 @@ void swapstring(string *a, string *b){
 }
 
 /**
+ * @brief Converts string to int
+ *
+ * @return -1 if any on-digit char is encountered. String must be an
+ * unsigned int. No errors are thrown on overflow.
+ */
+int64_t string_to_int(string str){
+    uint64_t num = 0;
+    for(char *ptr = str; *ptr; ptr++){
+        if(*ptr > '9' || *ptr < '0') return -1;
+        num = num*10+ (int)(*ptr - '0');
+    }
+    return num;
+}
+
+/**
  * @brief Returns a pointer to a string containing cwd
  * @return String: cwd. Caller must free.
  */
