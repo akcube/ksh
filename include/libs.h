@@ -39,5 +39,6 @@
 #include "builtins.h"
 #include "ls.h"
 #include "signal_handlers.h"
+#include "history.h"
 
 #endif

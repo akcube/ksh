@@ -28,5 +28,7 @@ void replace_tilda(string *path_adr);
 void reverse_replace_tilda(string *path_adr);
 void swapstring(string *a, string *b);
 int64_t string_to_int(string str);
+int min(int a, int b);
+void cleanup();
 
 #endif

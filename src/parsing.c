@@ -52,7 +52,16 @@ void parse_args(Command *command, string argstr){
  *
  * @param linebuf The entire line read from the terminal
  */
-void parse(char *linebuf){
+void parse(string linebuf){
+
+    bool empty = true;
+    for(char *ptr=linebuf; *ptr; ptr++){
+        if(*ptr==' ' || *ptr=='\t' || *ptr=='\n') continue;
+        empty = false;
+    }
+
+    if(empty) return;
+    log_history(linebuf);
 
     // Create dup string to easily check what the delim was
     char *dup = check_bad_alloc(strdup(linebuf));
@@ -68,7 +77,6 @@ void parse(char *linebuf){
         
         // First arg is always the program name
         char *token = strtok_r(front, " \t", &saveptr_c);
-
         if(!token) continue;
 
         // Fill in the Command struct with parsed data

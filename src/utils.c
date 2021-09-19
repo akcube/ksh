@@ -20,6 +20,8 @@
 
 Shell KSH;
 
+int min(int a, int b) { return (a<b)?a:b; }
+
 /**
  * @brief Swap two strings
  */
@@ -127,8 +129,11 @@ void init_history(){
         fread(&KSH.history, sizeof(History), 1, fptr);
         fclose(fptr);
     }
-    else
+    else{
+        int fd = open(hisfile, O_RDWR | O_CREAT, 0600);
+        close(fd);
         memset(&KSH.history, 0, sizeof(History));
+    }
 }
 
 /**
@@ -159,9 +164,23 @@ void init(){
     setup_sighandler(SIGCHLD, ksh_sigchld);
 }
 
+/**
+ * @brief Cleans up all excess resources allocated at init
+ * @details Writes history to disk storage and frees up resources
+ */
 void cleanup(){
     clrscr();
 
+    string hisfile = check_bad_alloc(strdup(HISTORY_NAME));
+    replace_tilda(&hisfile);
+
+    FILE *fptr = fopen(hisfile, "rb+");
+    if(fptr){
+        fwrite(&KSH.history, sizeof(History), 1, fptr);
+        fclose(fptr);
+    }
+
+    free(hisfile);
     free(KSH.username);
     free(KSH.hostname);
     free(KSH.homedir);
@@ -169,13 +188,4 @@ void cleanup(){
     free(KSH.lastdir);
     free(KSH.promptdir);
     destroy_proclist(&KSH.plist);
-
-    string hisfile = check_bad_alloc(strdup(HISTORY_NAME));
-    replace_tilda(&hisfile);
-
-    FILE *fptr = fopen(hisfile, "rb");
-    if(fptr){
-        fwrite(&KSH.history, sizeof(History), 1, fptr);
-        fclose(fptr);
-    }
 }

@@ -1,8 +1,8 @@
 #include "libs.h"
 #include "builtins.h"
 
-char *builtins[] = {"cd", "pwd", "echo", "ls", "repeat", "pinfo", NULL};
-int (*jumptable[])(Command *c) = {cd, pwd, echo, ls, repeat, pinfo};
+char *builtins[] = {"cd", "pwd", "echo", "ls", "repeat", "pinfo", "history", NULL};
+int (*jumptable[])(Command *c) = {cd, pwd, echo, ls, repeat, pinfo, history};
 
 /**
  * @brief Check if the command is a builtin command
@@ -12,6 +12,20 @@ bool is_builtin(char *name){
 	for(;(*builtin)!=NULL; builtin++)
 		if(!strcmp(name, *builtin)) return true;
 	return false;
+}
+
+int history(Command *c){
+	if(c->argc > 1){
+		throw_error(TOO_MANY_ARGS);
+		return -1;
+	}
+	int toshow = min(KSH.history.used, 20);
+	if(c->argc==1)
+		toshow = min(toshow, (int) string_to_int(c->argv.arr[1]));
+	for(int i=toshow-1; i>=0; i--){
+		printf("%s\n", KSH.history.data[i]);
+	}
+	return 0;
 }
 
 /**
