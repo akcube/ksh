@@ -98,11 +98,14 @@ int64_t __get_total(string dirname, string_vector *v){
 			strcat(path, "/");
 		strcat(path, filename);
 
+		// Sum over all file blocksizes
 		struct stat sb;
 		if(check_perror("ls", lstat(path, &sb), -1)) return -1;
 		total += sb.st_blocks;
 		free(path);
 	}
+
+	// Return total / 2
 	return total>>1;
 }
 
@@ -121,16 +124,18 @@ void __printdir_list(string dirname, string_vector *v){
 	int dirlen = strlen(dirname);
 
 	for(int i=0; i < v->size; i++){
-
+		// Variable setup / allocation
 		string filename = v->arr[i];
 		string path = check_bad_alloc(calloc(1, dirlen + strlen(filename) + 2));
+
+		// Generate filepath from directory path and filename
 		strcpy(path, dirname);
 		if(dirname[dirlen-1] != '/') 
 			strcat(path, "/");
 		strcat(path, filename);
 
+		// Print file output in list format
 		__print_list_file(path, filename);
-
 		free(path);
 	}
 
