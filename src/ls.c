@@ -9,10 +9,17 @@
 
 // -------------------------------- Util functions --------------------------------
 
+/**
+ * @brief Returns a string containing the perms for a file displayed by ls -l
+ * 
+ * @param stat Pointer to stat struct populated by call to lstat
+ * @return string containing the perms (1st column) of ls. Must be freed by caller.
+ */
 string get_perms(struct stat *sb){
 	
+	// Permission string is always 10 characters long
 	string res = check_bad_alloc(malloc(11*sizeof(char)));
-
+	// Mask out all non permission bits & set type appropriately
 	switch(sb->st_mode & S_IFMT){
 		case S_IFREG:	res[0] = '-'; break;
 		case S_IFDIR:	res[0] = 'd'; break;
@@ -31,9 +38,10 @@ string get_perms(struct stat *sb){
 		S_IROTH, S_IWOTH, S_IXOTH
 	};
 
+	// Mark read write perms for all groups
 	for(int i=0; i<9; i++)
 		res[i+1] = (sb->st_mode & masks[i]) ? p[i%3] : '-';
-	
+	// Null terminate string
 	res[10] = '\0';
 	return res;
 }

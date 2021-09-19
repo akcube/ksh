@@ -116,8 +116,5 @@ void init(){
     init_proclist(&(KSH.plist));
 
     // Setup signal handlers
-    // signal(SIGINT, ctrlcHandler);
-    // signal(SIGTSTP, ctrlzHandler);
-    // signal(SIGCHLD, ksh_sigchld);
     setup_sighandler(SIGCHLD, ksh_sigchld);
 }
