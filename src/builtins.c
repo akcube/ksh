@@ -72,7 +72,7 @@ int cd(Command *c){
 	string newpath;
 	if(c->argc==0) newpath = KSH.homedir; // Just cd should cd to home dir
 	else {
-		replace_tilda(&(c->argv.arr[1])); // Get absolute path 
+		// Get absolute path 
 		newpath = c->argv.arr[1];
 	}
 

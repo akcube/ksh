@@ -72,9 +72,12 @@ void __printdir_list(string dirname, string_vector *v){
 		string perms = get_perms(&sb);
 		if(!perms) return;
 
-		printf("%s %2ld %8s %8s %10ld ", perms, sb.st_nlink, getpwuid(sb.st_uid)->pw_name, \
+		printf("%s %3ld %8s %8s %10ld ", perms, sb.st_nlink, getpwuid(sb.st_uid)->pw_name, \
 				getgrgid(sb.st_gid)->gr_name, sb.st_size);
 
+		char date[81];
+		strftime(date, 80, "%b %d %H:%M", localtime(&(sb.st_ctime)));
+		printf("%s ", date);
 		
         printf(" %s\n", filename);
 

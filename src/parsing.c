@@ -39,6 +39,7 @@ void parse_args(Command *command, string argstr){
     for(;token!=NULL; token=strtok_r(NULL, " \t", &saveptr)){
         push_back(&(command->argv), token);
         command->argc++;
+        replace_tilda(&(command->argv.arr[command->argc]));
     }
     if(!is_builtin(command->name))
         push_back(&(command->argv), NULL);
