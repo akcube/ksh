@@ -16,6 +16,11 @@ typedef char* string;
 #define STAT_PGRPID 5
 #define STAT_VMSIZE 23
 
+#define HISTORY_SIZE 20
+#define DEFAULT_HIS_OUTPUT 10
+
+#define HISTORY_NAME "~/.ksh_history"
+
 void init();
 string get_cwd();
 string get_prompt_dir();

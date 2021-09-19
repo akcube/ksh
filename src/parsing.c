@@ -67,7 +67,9 @@ void parse(char *linebuf){
     for(;front!=NULL; front=strtok_r(NULL, delim, &saveptr_p)){
         
         // First arg is always the program name
-        char *token = strtok_r(front, " ", &saveptr_c);
+        char *token = strtok_r(front, " \t", &saveptr_c);
+
+        if(!token) continue;
 
         // Fill in the Command struct with parsed data
         init_command(&command, token);

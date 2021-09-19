@@ -22,6 +22,7 @@ void init_proclist(ProcList *ll);
 char* get_process_name(int id, Process **head);
 void insert_process(int id, char *s, struct Process **head);
 int remove_process(int id, struct Process **head);
+void destroy_proclist(ProcList *ll);
 
 #ifdef DEBUG
 	void printList(Process **head);

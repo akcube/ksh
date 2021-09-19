@@ -115,8 +115,20 @@ void reverse_replace_tilda(string *path_adr){
     }
 }
 
+/**
+ * @brief Open and read pre-logged history if it exists
+ */
 void init_history(){
+    string hisfile = check_bad_alloc(strdup(HISTORY_NAME));
+    replace_tilda(&hisfile);
 
+    FILE *fptr = fopen(hisfile, "rb");
+    if(fptr){
+        fread(&KSH.history, sizeof(History), 1, fptr);
+        fclose(fptr);
+    }
+    else
+        memset(&KSH.history, 0, sizeof(History));
 }
 
 /**
@@ -145,4 +157,25 @@ void init(){
 
     // Setup signal handlers
     setup_sighandler(SIGCHLD, ksh_sigchld);
+}
+
+void cleanup(){
+    clrscr();
+
+    free(KSH.username);
+    free(KSH.hostname);
+    free(KSH.homedir);
+    free(KSH.curdir);
+    free(KSH.lastdir);
+    free(KSH.promptdir);
+    destroy_proclist(&KSH.plist);
+
+    string hisfile = check_bad_alloc(strdup(HISTORY_NAME));
+    replace_tilda(&hisfile);
+
+    FILE *fptr = fopen(hisfile, "rb");
+    if(fptr){
+        fwrite(&KSH.history, sizeof(History), 1, fptr);
+        fclose(fptr);
+    }
 }

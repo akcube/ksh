@@ -68,3 +68,13 @@ void init_proclist(ProcList *ll){
 		ll->printList = &printList;
 	#endif
 }
+
+void destroy_proclist(ProcList *ll){
+	Process *head = ll->head;
+	Process *cur = head;
+	while(cur!=NULL){
+		cur = cur->next;
+		free(head);
+		head = cur;
+	}
+}
