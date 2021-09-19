@@ -12,6 +12,10 @@ typedef char* string;
 #define ISPARENT(X) X
 #define ISCHILD(X) !X
 
+#define STAT_STATUS 3
+#define STAT_PGRPID 5
+#define STAT_VMSIZE 23
+
 void init();
 string get_cwd();
 string get_prompt_dir();

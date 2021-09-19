@@ -1,8 +1,8 @@
 #include "libs.h"
 #include "builtins.h"
 
-char *builtins[] = {"cd", "pwd", "echo", "ls", "repeat", NULL};
-int (*jumptable[])(Command *c) = {cd, pwd, echo, ls, repeat};
+char *builtins[] = {"cd", "pwd", "echo", "ls", "repeat", "pinfo", NULL};
+int (*jumptable[])(Command *c) = {cd, pwd, echo, ls, repeat, pinfo};
 
 /**
  * @brief Check if the command is a builtin command
@@ -12,6 +12,82 @@ bool is_builtin(char *name){
 	for(;(*builtin)!=NULL; builtin++)
 		if(!strcmp(name, *builtin)) return true;
 	return false;
+}
+
+/**
+ * @brief Display process information
+ * @details Reads data from /proc/pid/stat and /proc/pid/exe to display
+ * status, activity and executeable location of process with given pid
+ * 
+ * @return -1 on failure. 0 on success.
+ */
+int pinfo(Command *c){
+
+	// pinfo can have at most one argument
+	if(c->argc > 1){
+		throw_error(TOO_MANY_ARGS);
+		return -1;
+	}
+
+	// if no arguments pid is self pid
+	int pid = getpid();
+	if(c->argc != 0)
+		pid = string_to_int(c->argv.arr[1]);
+	if(pid==-1){
+		throw_error(BAD_ARGS);
+		return -1;
+	}
+
+	// We will query /proc/pid/stat to get process information
+	int reqlen = 1024; // strlen("/proc/x/stat")
+	string query = malloc(reqlen);
+	sprintf(query, "/proc/%d/stat", pid);
+
+	// Open /proc/pid/stat
+	int fd = open(query, O_RDONLY);
+	if(fd < 0){
+		printf("Program with pid: %d doesn't exist\n", pid);
+		return -1;
+	}
+	// Read data to buf
+	string buf = malloc(1024*8);
+	if(check_perror("pinfo", read(fd, buf, 1024*8), -1)) return -1;
+
+	// Setup variables to store the data retrieved
+	char status;
+	int64_t memory_used = 0;
+	char status_activity;
+	pid_t pgrp_id = 0;
+
+	// Go through every token in data retrieved from proc, save relevant info
+	char *saveptr;
+	char *token = strtok_r(buf, " ", &saveptr);
+	for(int argno=1; token; token=strtok_r(NULL, " ", &saveptr), argno++){
+		if(argno==STAT_STATUS) status = token[0];
+		if(argno==STAT_PGRPID) pgrp_id = string_to_int(token);
+		if(argno==STAT_VMSIZE) memory_used = string_to_int(token);
+	}
+	// Close file
+	if(check_perror("pinfo", close(fd), -1)) return -1;
+
+	// If pgrpid == foreground group id, set foreground process
+	status_activity = (pgrp_id==tcgetpgrp(0)) ? '+':'-';
+
+	// Query /proc/exe for executable path. Handle symlink
+	sprintf(query, "/proc/%d/exe", pid);
+	int readlen = readlink(query, buf, 1024*8);
+	buf[readlen] = 0;
+
+	// Print relevant info
+	printf("pid -- %d\n", pid);
+    printf("Process Status -- %c%c\n", status, status_activity);
+    printf("memory -- %ld\n", memory_used);
+    printf("Executable Path -- %s\n", buf);
+
+    // Cleanup
+	free(buf);
+	free(query);
+	return 0;
 }
 
 /**

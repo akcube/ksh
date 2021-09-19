@@ -17,6 +17,7 @@
 #define PRINTF_FAIL 6
 #define BAD_FLAGS 7
 #define TOO_LESS_ARGS 8
+#define BAD_ARGS 9
 
 void throw_fatal_perror(char *errMsg);
 int check_fatal_perror(char *errMsg, int retval, int success);

@@ -7,6 +7,6 @@ int cd(Command *c);
 int pwd(Command *c);
 int echo(Command *c);
 int repeat(Command *c);
-
+int pinfo(Command *c);
 
 #endif

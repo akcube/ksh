@@ -9,8 +9,8 @@
 #include "libs.h"
 #include "error_handlers.h"
 
-const int elist_sz = 9;
-char *c_errlist[9] = { 	
+const int elist_sz = 10;
+char *c_errlist[10] = { 	
 						"Error: System out of memory. Malloc failed.", 
 						"Error: Out of bounds access on string_vector.",
 						"KSH: Initialization failed.",
@@ -19,7 +19,8 @@ char *c_errlist[9] = {
 						"KSH: Too many arguments passed to function",
 						"Error: Unexpected printf failure.",
 						"KSH: Incorrect flags passed to program.",
-						"KSH: Not enough arguments provided."};
+						"KSH: Not enough arguments provided.",
+						"KSH: Incorrect arguments passed to program."};
 
 // Fatal errors exit the process
 void throw_fatal_perror(char *errMsg){

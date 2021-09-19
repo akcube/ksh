@@ -110,8 +110,9 @@ void __printdir_dfl(string_vector *v){
 int ls(Command *c){
 	// Init command state vars
 	uint8_t flags = 0;
-	string_vector directories;
+	string_vector directories, files;
 	create_vector(&directories, 2);
+	create_vector(&files, 2);
 	int dirs_received = 0;
 
 	// Parse Arguments
@@ -147,6 +148,14 @@ int ls(Command *c){
 				throw_error(PRINTF_FAIL); free(buf);
 				return -1;
 			}
+			struct stat sb;
+			if(check_perror(buf, lstat(c->argv.arr[i], &sb), -1)) continue;
+			if(S_ISREG(sb.st_mode)){
+				push_back(&files, c->argv.arr[i]);
+				free(buf);
+				continue;
+			}
+
 			// If given path is not a directory we can open, write error to terminal
 			DIR *tmp;
 			if(check_perror(buf, (long long) (tmp = opendir(c->argv.arr[i])), 0)){
@@ -192,6 +201,7 @@ int ls(Command *c){
 
 		// Sort all files irrespective of case for pretty printing
 		vec_sort(&list, CASE_INSENSITIVE_SORT);
+		vec_sort(&files, CASE_INSENSITIVE_SORT);
 
 		// Print directory contents
 		if(!LIST_FORMAT(flags))
