@@ -25,12 +25,13 @@ int execute(Command *c){
 			signal(SIGINT, SIG_DFL);
         	signal(SIGTSTP, SIG_DFL);
 
-        	// Run process
-			if(c->runInBackground) printf("%d\n", getpid());
 			execvp(c->name, c->argv.arr);
+			cleanup();
 			throw_fatal_error(EXEC_FAIL);
 		}
 		else{
+        	// Run process
+			if(c->runInBackground) printf("%d\n", pid);
 			// If foreground process
 			if(!c->runInBackground){
 				int status;

@@ -16,4 +16,5 @@ void log_history(string linebuf){
 	}
 	strncpy(&KSH.history.data[0][0], linebuf, MAX_COMMAND_LENGTH-2);
 	KSH.history.used++;
+	KSH.history.used = min(KSH.history.used, 20);
 }

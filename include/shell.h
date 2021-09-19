@@ -8,7 +8,7 @@
 #ifndef __SHELL_INCLUDE
 #define __SHELL_INCLUDE
 
-#define MAX_COMMAND_LENGTH 1024
+#define MAX_COMMAND_LENGTH 8192
 
 typedef struct history{
 	int used;
@@ -36,5 +36,7 @@ typedef struct Command{
 
 // Declares it and makes it accessible in all files this header is included in
 extern Shell KSH;
+extern string getline_inp;
+extern int getline_pt;
 
 #endif

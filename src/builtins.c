@@ -96,7 +96,7 @@ int pinfo(Command *c){
 	// Print relevant info
 	printf("pid -- %d\n", pid);
     printf("Process Status -- %c%c\n", status, status_activity);
-    printf("memory -- %ld\n", memory_used);
+    printf("memory -- %ldB\n", memory_used);
     printf("Executable Path -- %s\n", buf);
 
     // Cleanup

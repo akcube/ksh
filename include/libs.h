@@ -26,6 +26,8 @@
 #include<stdint.h>
 #include<dirent.h>
 #include<grp.h>
+#include<termios.h>
+#include<ctype.h>
 
 // Self-defined include files
 #include "proclist.h"

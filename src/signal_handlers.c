@@ -25,6 +25,9 @@ void ksh_ctrlc(int SIG, siginfo_t *info, void *){
     write(1, "\n", strlen("\n"));
     sprintf(buf, "<%s@%s:%s> ", KSH.username, KSH.hostname, KSH.promptdir);
     write(1, buf, strlen(buf));
+    getline_pt = 0;
+    if(getline_inp)
+        memset(getline_inp, 0, MAX_COMMAND_LENGTH);
 }
 
 /**
@@ -35,6 +38,9 @@ void ksh_ctrlz(int SIG, siginfo_t *info, void *){
     write(1, "\n", strlen("\n"));
     sprintf(buf, "<%s@%s:%s> ", KSH.username, KSH.hostname, KSH.promptdir);
     write(1, buf, strlen(buf));
+    getline_pt = 0;
+    if(getline_inp)
+        memset(getline_inp, 0, MAX_COMMAND_LENGTH);
 }
 
 /**
@@ -76,4 +82,7 @@ void ksh_sigchld(int SIG, siginfo_t *info, void *f){
     	sprintf(buf, "<%s@%s:%s> ", KSH.username, KSH.hostname, KSH.promptdir);
     	write(1, buf, strlen(buf));
     }
+    getline_pt = 0;
+    if(getline_inp)
+        memset(getline_inp, 0, MAX_COMMAND_LENGTH);
 }
