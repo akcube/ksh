@@ -26,6 +26,7 @@ void enableRawMode() {
     if (tcsetattr(0, TCSAFLUSH, &raw) == -1) throw_fatal_perror("tcsetattr");
 }
 
+// TODO: Make this look nicer :)
 string get_line(){
     getline_inp = malloc(sizeof(char) * MAX_COMMAND_LENGTH);
     char c;

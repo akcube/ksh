@@ -28,3 +28,19 @@ It's a shell
 - [x] Can repeat commands (even recursively!)
 - [x] Implements history
 - [x] Implements up arrow and bottom arrow key to access history dynamically
+
+### File structure
+`builtins.c` contains code for the builtin functions, except ls.
+`ls.c` contains code for ls.
+`error_handlers.c` contains code for the error handlers.
+`execute.c` contains code for functions that execute both system and call builtin functions.
+`history.c` contains code for pushing logs into history.
+`parsing.c` contains code for parsing input lines read from terminal into Command structs and arg string vectors.
+`proclist.c` contains code for a doubly linked list that stores the list of active background processes.
+`prompt.c` contains code for reading input, up/bottom arrow keys and displaying prompt.
+`shell.c` contains the REPL loop.
+`signal_handlers.c` contains code for both installing the handlers and the handlers themselves.
+`utils.c` contains code for util functions used throughout the code. Noteworthy functions are init which sets up all the basic shell state resources and cleanup which frees resources and saves history to file.
+`vector.c` contains code for a string vector object that supports pushback, top, dynamic reallocation for O(1) amortized insertion, and sorting. 
+
+They've been heavily commented and the functions should be mostly self explanatory. 
