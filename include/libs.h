@@ -25,6 +25,7 @@
 #include<time.h>
 #include<stdint.h>
 #include<dirent.h>
+#include<grp.h>
 
 // Self-defined include files
 #include "error_handlers.h"
@@ -35,5 +36,6 @@
 #include "parsing.h"
 #include "execute.h"
 #include "builtins.h"
+#include "ls.h"
 
 #endif

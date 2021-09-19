@@ -69,3 +69,31 @@ void destroy_vector(string_vector *v){
     free(v->arr);
     v->size = v->table_size = 0;
 }
+
+
+/**
+ * @brief wrapper around strcasecmp
+ */
+int case_insensitive_cmpfunc(const void *a, const void *b){
+    return strcasecmp(*(const char **)a, *(const char **)b);
+}
+
+/**
+ * @brief wrapper around strcmp
+ */
+int case_sensitive_cmpfunc(const void *a, const void *b){
+    return strcmp(*(const char **)a, *(const char **)b);
+}
+
+/**
+ * @brief Sort a string of vectors
+ * 
+ * @param v Pointer to the vector to be sorted
+ * @param casesens Boolean flag for whether the sort should consider case or not
+ */
+void vec_sort(string_vector *v, bool casesens){
+    if(!casesens)
+        qsort(v->arr, v->size, sizeof(string), case_insensitive_cmpfunc);
+    else
+        qsort(v->arr, v->size, sizeof(string), case_sensitive_cmpfunc);
+}

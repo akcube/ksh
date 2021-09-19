@@ -11,9 +11,9 @@
  * @param c Command struct containing all details of command to execute
  * @return 0 if successful. -1 if failure.
  */
-int execute(Command c){
+int execute(Command *c){
 	// Check if system command
-	if(!is_builtin(c.name)){
+	if(!is_builtin(c->name)){
 		pid_t pid = fork();
 
 		if(check_error(FORK_FAIL, pid, -1)) return -1;
@@ -21,13 +21,13 @@ int execute(Command c){
 		// Create process group for child and execute program
 		if(ISCHILD(pid)){
 			setpgid(0, 0);
-			if(c.runInBackground) printf("%d\n", getpid());
-			execvp(c.name, c.argv.arr);
+			if(c->runInBackground) printf("%d\n", getpid());
+			execvp(c->name, c->argv.arr);
 			throw_fatal_error(EXEC_FAIL);
 		}
 		else{
 			// If foreground process
-			if(!c.runInBackground){
+			if(!c->runInBackground){
 				int status;
 				// Set process group in parent as well to avoid race condition
 				setpgid(pid, 0);

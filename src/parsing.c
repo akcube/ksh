@@ -77,7 +77,7 @@ void parse(char *linebuf){
             parse_args(&command, token);
 
         // Execute and cleanup
-        execute(command);
+        execute(&command);
         destroy_command(&command);
     }
     free(dup);

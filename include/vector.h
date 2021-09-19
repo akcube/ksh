@@ -19,7 +19,11 @@ typedef struct string_vector{
 void push_back(string_vector*, string);
 void pop_back(string_vector*);
 string top(string_vector*);
-void create_vector(string_vector* v, uint32_t n);
-void destroy_vector(string_vector* v);
+void create_vector(string_vector*, uint32_t n);
+void destroy_vector(string_vector*);
+void vec_sort(string_vector*, bool);
+
+#define CASE_SENSITIVE_SORT 1
+#define CASE_INSENSITIVE_SORT 0
 
 #endif
