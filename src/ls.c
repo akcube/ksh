@@ -46,9 +46,68 @@ string get_perms(struct stat *sb){
 	return res;
 }
 
+/**
+ * @brief Print details of a file in ls -l format
+ * 
+ * @param filepath Path to file from cwd
+ * @param filename Name to display on last column
+ */
+void __print_list_file(string filepath, string filename){
 
+	// Read stat struct
+	struct stat sb;
+	if(check_perror("ls", lstat(filepath, &sb), -1)) return;
+
+	// Obtain perms string
+	string perms = get_perms(&sb);
+	if(!perms) return;
+	
+	// Read st_mtime and format as required
+	char date[81];
+	time_t curtime = time(0);
+	if(llabs(curtime-sb.st_mtime) >= 15811200)
+		strftime(date, 80, "%b %d  %Y", localtime(&(sb.st_mtime)));
+	else
+		strftime(date, 80, "%b %d %H:%M", localtime(&(sb.st_mtime)));
+
+	// Print output
+	printf("%s ", perms);
+	printf("%3ld ", sb.st_nlink);
+	printf("%8s ", getpwuid(sb.st_uid)->pw_name);
+	printf("%8s ", getgrgid(sb.st_gid)->gr_name);
+	printf("%10ld ", sb.st_size);
+	printf("%s ", date);
+    printf("%s\n", filename);
+
+    // Cleanup
+	free(perms);
+}
+
+int64_t __get_total(string dirname, string_vector *v){
+	
+	int dirlen = strlen(dirname);
+	int64_t total = 0;
+
+	for(int i=0; i < v->size; i++){
+
+		string filename = v->arr[i];
+		string path = check_bad_alloc(calloc(1, dirlen + strlen(filename) + 2));
+		// Generate filepath
+		strcpy(path, dirname);
+		if(dirname[dirlen-1] != '/') 
+			strcat(path, "/");
+		strcat(path, filename);
+
+		struct stat sb;
+		if(check_perror("ls", lstat(path, &sb), -1)) return -1;
+		total += sb.st_blocks;
+		free(path);
+	}
+	return total>>1;
+}
 
 // -------------------------------- Util functions --------------------------------
+
 
 /**
  * @brief ls -l print command
@@ -70,31 +129,9 @@ void __printdir_list(string dirname, string_vector *v){
 			strcat(path, "/");
 		strcat(path, filename);
 
-		struct stat sb;
-		if(check_perror("ls", lstat(path, &sb), -1)) {
-			free(path);	
-			return;
-		}
+		__print_list_file(path, filename);
+
 		free(path);
-
-		string perms = get_perms(&sb);
-		if(!perms) return;
-
-		printf("%s %3ld %8s %8s %10ld ", perms, sb.st_nlink, getpwuid(sb.st_uid)->pw_name, \
-				getgrgid(sb.st_gid)->gr_name, sb.st_size);
-
-		char date[81];
-		time_t curtime = time(0);
-		if(llabs(curtime-sb.st_mtime) >= 15811200)
-			strftime(date, 80, "%b %d  %Y", localtime(&(sb.st_mtime)));
-		else
-			strftime(date, 80, "%b %d %H:%M", localtime(&(sb.st_mtime)));
-
-		printf("%s ", date);
-
-        printf(" %s\n", filename);
-
-		free(perms);
 	}
 
 }
@@ -178,9 +215,18 @@ int ls(Command *c){
 
 	// If no directories specified, ls on cwd
 	if(dirs_received == 0) push_back(&directories, ".");
-
 	vec_sort(&directories, CASE_INSENSITIVE_SORT);
+	vec_sort(&files, CASE_INSENSITIVE_SORT);
 
+	// Output all singleton files first
+	for(int i=0; i<files.size; i++){
+		if(LIST_FORMAT(flags))
+			__print_list_file(files.arr[i], files.arr[i]);
+		else
+			printf("%s  ", files.arr[i]);
+	}
+
+	printf("\n");
 	// Iterate over all directories
 	for(int i=0; i<directories.size; i++){
 		// If multiple directories, print directory name
@@ -209,7 +255,9 @@ int ls(Command *c){
 
 		// Sort all files irrespective of case for pretty printing
 		vec_sort(&list, CASE_INSENSITIVE_SORT);
-		vec_sort(&files, CASE_INSENSITIVE_SORT);
+
+		// Print total number of blocks required
+		printf("total %ld\n", __get_total(directories.arr[i], &list));
 
 		// Print directory contents
 		if(!LIST_FORMAT(flags))
