@@ -77,6 +77,7 @@ int pinfo(Command *c){
 	sprintf(query, "/proc/%d/exe", pid);
 	int readlen = readlink(query, buf, 1024*8);
 	buf[readlen] = 0;
+	reverse_replace_tilda(&buf);
 
 	// Print relevant info
 	printf("pid -- %d\n", pid);

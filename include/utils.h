@@ -20,6 +20,7 @@ void init();
 string get_cwd();
 string get_prompt_dir();
 void replace_tilda(string *path_adr);
+void reverse_replace_tilda(string *path_adr);
 void swapstring(string *a, string *b);
 int64_t string_to_int(string str);
 

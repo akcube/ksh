@@ -95,6 +95,31 @@ void replace_tilda(string *path_adr){
 }
 
 /**
+ * @brief Replaces any prefix of the home directory with ~ in given string
+ */
+void reverse_replace_tilda(string *path_adr){
+    string path = *path_adr;
+    bool match = true;
+    uint32_t len = 0;
+    for(char *a=path, *b=KSH.homedir; *a != '\0' && *b != '\0'; a++, b++){
+        if(*a != *b) match = false;
+        len++;
+    }
+    if(match && KSH.homedir[len] == '\0'){
+        path[0] = '~';
+        string dup = check_bad_alloc(strdup(path));
+        strcpy(path+1, &dup[len]);
+        int overlen = strlen(&dup[len]);
+        path[1+overlen] = '\0';
+        free(dup);
+    }
+}
+
+void init_history(){
+
+}
+
+/**
  * @brief Initializes all global dependencies of the shell
  * @details Clears screen, sets up home directory & sets up history tracking
  */
@@ -111,6 +136,9 @@ void init(){
     KSH.curdir = get_cwd();
     KSH.lastdir = get_cwd();
     KSH.promptdir = get_prompt_dir();
+
+    // Initialize history
+    init_history();
 
     // Initialize process list
     init_proclist(&(KSH.plist));

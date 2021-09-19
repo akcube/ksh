@@ -8,6 +8,13 @@
 #ifndef __SHELL_INCLUDE
 #define __SHELL_INCLUDE
 
+#define MAX_COMMAND_LENGTH 1024
+
+typedef struct history{
+	int used;
+	char data[20][MAX_COMMAND_LENGTH];
+} History;
+
 typedef struct Shell{
 	string hostname;
 	string username;
@@ -17,6 +24,7 @@ typedef struct Shell{
 	string promptdir;
 	uid_t uid;
 	ProcList plist;
+	History history;
 } Shell;
 
 typedef struct Command{
