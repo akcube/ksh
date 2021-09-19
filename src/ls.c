@@ -76,9 +76,14 @@ void __printdir_list(string dirname, string_vector *v){
 				getgrgid(sb.st_gid)->gr_name, sb.st_size);
 
 		char date[81];
-		strftime(date, 80, "%b %d %H:%M", localtime(&(sb.st_ctime)));
+		time_t curtime = time(0);
+		if(llabs(curtime-sb.st_mtime) >= 15811200)
+			strftime(date, 80, "%b %d  %Y", localtime(&(sb.st_mtime)));
+		else
+			strftime(date, 80, "%b %d %H:%M", localtime(&(sb.st_mtime)));
+
 		printf("%s ", date);
-		
+
         printf(" %s\n", filename);
 
 		free(perms);
@@ -194,10 +199,8 @@ int ls(Command *c){
 		else 
 			__printdir_list(directories.arr[i], &list);
 
-		// Cleanup
-		destroy_vector(&list);
-
 		// Cleanup & handle errors
+		destroy_vector(&list);
 		if(printf("\n") < 0) throw_error(PRINTF_FAIL);
 		if(i!=directories.size-1) if(printf("\n") < 0) throw_error(PRINTF_FAIL);
 		if(check_perror("ls", closedir(d), -1)) continue;
