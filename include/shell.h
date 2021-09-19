@@ -16,6 +16,7 @@ typedef struct Shell{
 	string lastdir;
 	string promptdir;
 	uid_t uid;
+	ProcList plist;
 } Shell;
 
 typedef struct Command{

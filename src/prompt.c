@@ -15,9 +15,7 @@ int prompt(){
     check_fatal_perror("Prompt", comm_len, -1);
     linebuf[comm_len-1] = '\0'; // Remove the trailing '\n'
 
-    #ifdef DEBUG
-    	if(!strcmp("exit", linebuf)) return 0;
-    #endif
+   	if(!strcmp("exit", linebuf)) return 0;
 
     if(comm_len > 1) parse(linebuf);
 

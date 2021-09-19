@@ -20,7 +20,12 @@ int execute(Command *c){
 
 		// Create process group for child and execute program
 		if(ISCHILD(pid)){
+			// Give process it's own group id and restore default signal handlers
 			setpgid(0, 0);
+			signal(SIGINT, SIG_DFL);
+        	signal(SIGTSTP, SIG_DFL);
+
+        	// Run process
 			if(c->runInBackground) printf("%d\n", getpid());
 			execvp(c->name, c->argv.arr);
 			throw_fatal_error(EXEC_FAIL);
@@ -46,6 +51,10 @@ int execute(Command *c){
 				// Set TTIN & TTOUT handlers back to default
 				signal(SIGTTIN, SIG_DFL);
 				signal(SIGTTOU, SIG_DFL);
+			}
+			else{
+				// Add background process to list of open background processes
+				insert_process(pid, c->name, &(KSH.plist.head));
 			}
 		}
 		return 1;

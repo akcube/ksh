@@ -28,6 +28,7 @@
 #include<grp.h>
 
 // Self-defined include files
+#include "proclist.h"
 #include "error_handlers.h"
 #include "utils.h"
 #include "vector.h"
@@ -37,5 +38,6 @@
 #include "execute.h"
 #include "builtins.h"
 #include "ls.h"
+#include "signal_handlers.h"
 
 #endif

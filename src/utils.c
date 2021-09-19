@@ -111,4 +111,13 @@ void init(){
     KSH.curdir = get_cwd();
     KSH.lastdir = get_cwd();
     KSH.promptdir = get_prompt_dir();
+
+    // Initialize process list
+    init_proclist(&(KSH.plist));
+
+    // Setup signal handlers
+    // signal(SIGINT, ctrlcHandler);
+    // signal(SIGTSTP, ctrlzHandler);
+    // signal(SIGCHLD, ksh_sigchld);
+    setup_sighandler(SIGCHLD, ksh_sigchld);
 }
