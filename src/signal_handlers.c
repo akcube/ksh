@@ -18,6 +18,26 @@ void setup_sighandler(int SIG, void (*handler)(int, siginfo_t*, void*)){
 }
 
 /**
+ * @brief Handles receiving ctrl-c signals and ignores them
+ */
+void ksh_ctrlc(int SIG, siginfo_t *info, void *){
+    char buf[1024];
+    write(0, "\n", strlen("\n"));
+    sprintf(buf, "<%s@%s:%s> ", KSH.username, KSH.hostname, KSH.promptdir);
+    write(0, buf, strlen(buf));
+}
+
+/**
+ * @brief Handles receiving ctrl-z signals and ignores them
+ */
+void ksh_ctrlz(int SIG, siginfo_t *info, void *){
+    char buf[1024];
+    write(0, "\n", strlen("\n"));
+    sprintf(buf, "<%s@%s:%s> ", KSH.username, KSH.hostname, KSH.promptdir);
+    write(0, buf, strlen(buf));
+}
+
+/**
  * @brief Reaps any background processes spawned by the shell and displays to terminal
  */
 void ksh_sigchld(int SIG, siginfo_t *info, void *f){
@@ -56,4 +76,4 @@ void ksh_sigchld(int SIG, siginfo_t *info, void *f){
     	sprintf(buf, "<%s@%s:%s> ", KSH.username, KSH.hostname, KSH.promptdir);
     	write(0, buf, strlen(buf));
     }
-	}
+}

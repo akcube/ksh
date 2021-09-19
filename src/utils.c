@@ -162,6 +162,8 @@ void init(){
 
     // Setup signal handlers
     setup_sighandler(SIGCHLD, ksh_sigchld);
+    setup_sighandler(SIGINT, ksh_ctrlc);
+    setup_sighandler(SIGTSTP, ksh_ctrlz);
 }
 
 /**
