@@ -22,9 +22,9 @@ void setup_sighandler(int SIG, void (*handler)(int, siginfo_t*, void*)){
  */
 void ksh_ctrlc(int SIG, siginfo_t *info, void *){
     char buf[1024];
-    write(0, "\n", strlen("\n"));
+    write(1, "\n", strlen("\n"));
     sprintf(buf, "<%s@%s:%s> ", KSH.username, KSH.hostname, KSH.promptdir);
-    write(0, buf, strlen(buf));
+    write(1, buf, strlen(buf));
 }
 
 /**
@@ -32,9 +32,9 @@ void ksh_ctrlc(int SIG, siginfo_t *info, void *){
  */
 void ksh_ctrlz(int SIG, siginfo_t *info, void *){
     char buf[1024];
-    write(0, "\n", strlen("\n"));
+    write(1, "\n", strlen("\n"));
     sprintf(buf, "<%s@%s:%s> ", KSH.username, KSH.hostname, KSH.promptdir);
-    write(0, buf, strlen(buf));
+    write(1, buf, strlen(buf));
 }
 
 /**
@@ -69,11 +69,11 @@ void ksh_sigchld(int SIG, siginfo_t *info, void *f){
             sprintf(buf, "\n%s with pid %d did not exit normally\n", process_name, c_pid);
             remove_process(c_pid, &(KSH.plist.head));
         }
-        write(0, buf, strlen(buf));
+        write(1, buf, strlen(buf));
     }
     // Output prompt again only if interrupted by background process SIGCHLD
     if(isBackground){
     	sprintf(buf, "<%s@%s:%s> ", KSH.username, KSH.hostname, KSH.promptdir);
-    	write(0, buf, strlen(buf));
+    	write(1, buf, strlen(buf));
     }
 }
