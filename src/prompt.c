@@ -35,7 +35,7 @@ string get_line(){
     enableRawMode();
     memset(getline_inp, 0, MAX_COMMAND_LENGTH);
     getline_pt = 0;
-    int history_on = 0;
+    int history_on = -1;
     while (read(0, &c, 1) == 1) {
         if(getline_pt==MAX_COMMAND_LENGTH){
             getline_inp = realloc(getline_inp, getline_pt<<1);
@@ -52,7 +52,8 @@ string get_line(){
                 if (read(0, buf, 2) == 2) { // length of escape code
                     if(buf[1]=='A'){
                         // Up arrow was pressed
-                        if(!(history_on < KSH.history.used-1)) continue;
+                        if(history_on < KSH.history.used-1)
+                            history_on++;
                         while(getline_pt>0){
                             if (getline_inp[getline_pt-1] == 9) {
                                 for (int i = 0; i < 7; i++) {
@@ -62,17 +63,17 @@ string get_line(){
                             getline_inp[--getline_pt] = '\0';
                             printf("\b \b");
                         }
-                        if(history_on < KSH.history.used-1){
-                            int len = strlen(KSH.history.data[history_on]);
-                            for(int k=0; k<len; k++){
-                                getline_inp[getline_pt++] = KSH.history.data[history_on][k];
-                                printf("%c", KSH.history.data[history_on][k]);
-                            }
-                            history_on++;
+                        
+                        int len = strlen(KSH.history.data[history_on]);
+                        for(int k=0; k<len; k++){
+                            getline_inp[getline_pt++] = KSH.history.data[history_on][k];
+                            printf("%c", KSH.history.data[history_on][k]);
                         }
                     }
                     else if(buf[1]=='B'){
                         // Down arrow was pressed
+                        if(history_on>=0)
+                            history_on--;
                         while(getline_pt>0){
                             if (getline_inp[getline_pt-1] == 9) {
                                 for (int i = 0; i < 7; i++) {
@@ -82,13 +83,12 @@ string get_line(){
                             getline_inp[--getline_pt] = '\0';
                             printf("\b \b");
                         }
-                        if(history_on > 0){
+                        if(history_on >= 0){
                             int len = strlen(KSH.history.data[history_on]);
                             for(int k=0; k<len; k++){
                                 getline_inp[getline_pt++] = KSH.history.data[history_on][k];
                                 printf("%c", KSH.history.data[history_on][k]);
                             }
-                            history_on--;
                         }
                     }
                 }

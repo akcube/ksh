@@ -109,6 +109,80 @@ int64_t __get_total(string dirname, string_vector *v){
 	return total>>1;
 }
 
+int __ls_parse_arguments(Command *c, string_vector *directories, string_vector *files, uint8_t *FLAG){
+
+	uint8_t flags = 0;
+	int dir_parsed = 0;
+	// Parse Arguments
+	for(int i=1; i<=c->argc; i++){
+		// If flag argument
+		if(c->argv.arr[i][0] == '-'){
+			// Iterate over all flags 
+			for(char *ptr = c->argv.arr[i] + 1; *ptr; ptr++){
+				// Set appropriate bit per flag / throw error
+				switch(*ptr){
+					case 'l':
+						flags |= BIT_L;
+					break;
+					case 'a':
+						flags |= BIT_A;
+					break;
+					default:
+						throw_error(BAD_FLAGS);
+						return -1;
+				}
+			}
+		}
+		// If not a flag argument, it must be a directory.
+		else{
+			dir_parsed++;
+			int W_SZ = 20; // => strlen("ls: cannot access ''")
+			
+			// TODO: Optimize this so I don't have to malloc for every directory
+			// Can malloc once for buf and realloc for appending only when necessary
+			// Constant prefix so just overwrite suffix from constant offset.
+			string buf = malloc(strlen(c->argv.arr[i]) + W_SZ + 1);
+			if(sprintf(buf, "ls: cannot access '%s'", c->argv.arr[i]) < 0){
+				throw_error(PRINTF_FAIL); free(buf);
+				return -1;
+			}
+			struct stat sb;
+			if(check_perror(buf, lstat(c->argv.arr[i], &sb), -1)) continue;
+			if(S_ISREG(sb.st_mode)){
+				push_back(files, c->argv.arr[i]);
+				free(buf);
+				continue;
+			}
+
+			// If given path is not a directory we can open, write error to terminal
+			DIR *tmp;
+			if(check_perror(buf, (long long) (tmp = opendir(c->argv.arr[i])), 0)){
+				free(buf); continue;
+			}
+			free(buf);
+			if(check_perror("ls", closedir(tmp), -1)) continue;
+			// Valid directory, populate directory vector
+			push_back(directories, c->argv.arr[i]);
+		}
+	}
+	*FLAG = flags;
+	return dir_parsed;
+}
+
+void __print_single_files(string_vector &files){
+	
+	if(!files->size) return; // No files to output
+
+	// Output all singleton files 
+	for(int i=0; i<files.size; i++){
+		if(LIST_FORMAT(flags))
+			__print_list_file(files.arr[i], files.arr[i]);
+		else
+			printf("%s  ", files.arr[i]);
+	}
+	printf("\n");
+}
+
 // -------------------------------- Util functions --------------------------------
 
 
@@ -165,73 +239,20 @@ int ls(Command *c){
 	create_vector(&files, 2);
 	int dirs_received = 0;
 
-	// Parse Arguments
-	for(int i=1; i<=c->argc; i++){
-		// If flag argument
-		if(c->argv.arr[i][0] == '-'){
-			// Iterate over all flags 
-			for(char *ptr = c->argv.arr[i] + 1; *ptr; ptr++){
-				// Set appropriate bit per flag / throw error
-				switch(*ptr){
-					case 'l':
-						flags |= BIT_L;
-					break;
-					case 'a':
-						flags |= BIT_A;
-					break;
-					default:
-						throw_error(BAD_FLAGS);
-						return -1;
-				}
-			}
-		}
-		// If not a flag argument, it must be a directory.
-		else{
-			dirs_received++;
-			int W_SZ = 20; // => strlen("ls: cannot access ''")
-			
-			// TODO: Optimize this so I don't have to malloc for every directory
-			// Can malloc once for buf and realloc for appending only when necessary
-			// Constant prefix so just overwrite suffix from constant offset.
-			string buf = malloc(strlen(c->argv.arr[i]) + W_SZ + 1);
-			if(sprintf(buf, "ls: cannot access '%s'", c->argv.arr[i]) < 0){
-				throw_error(PRINTF_FAIL); free(buf);
-				return -1;
-			}
-			struct stat sb;
-			if(check_perror(buf, lstat(c->argv.arr[i], &sb), -1)) continue;
-			if(S_ISREG(sb.st_mode)){
-				push_back(&files, c->argv.arr[i]);
-				free(buf);
-				continue;
-			}
-
-			// If given path is not a directory we can open, write error to terminal
-			DIR *tmp;
-			if(check_perror(buf, (long long) (tmp = opendir(c->argv.arr[i])), 0)){
-				free(buf); continue;
-			}
-			free(buf);
-			if(check_perror("ls", closedir(tmp), -1)) continue;
-			// Valid directory, populate directory vector
-			push_back(&directories, c->argv.arr[i]);
-		}
-	}
+	// Parse arguments & return if error
+	dirs_received = __ls_parse_arguments(c, &directories, &files, &flags);
+	if(dirs_received==-1) return -1;
 
 	// If no directories specified, ls on cwd
 	if(dirs_received == 0) push_back(&directories, ".");
+
 	vec_sort(&directories, CASE_INSENSITIVE_SORT);
 	vec_sort(&files, CASE_INSENSITIVE_SORT);
 
-	// Output all singleton files first
-	for(int i=0; i<files.size; i++){
-		if(LIST_FORMAT(flags))
-			__print_list_file(files.arr[i], files.arr[i]);
-		else
-			printf("%s  ", files.arr[i]);
-	}
+	__print_single_files(&files, flags);
 
-	printf("\n");
+	if(list->size && directories->size) printf("\n"); // Pretty printing
+
 	// Iterate over all directories
 	for(int i=0; i<directories.size; i++){
 		// If multiple directories, print directory name
@@ -279,5 +300,6 @@ int ls(Command *c){
 
 	// Cleanup
 	destroy_vector(&directories);
+	destroy_vector(&files);
 	return 0;
 }

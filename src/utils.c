@@ -61,6 +61,8 @@ string get_cwd(){
  * @brief Returns the shell prompt path relative to home
  * @details Attempts to match prefix of cwd with home path. If there is complete
  * match, the home prefix is substituted with '~'
+ * 
+ * @return String: promptdir. Caller must free.
  */
 string get_prompt_dir(){
     bool match = true;
@@ -122,15 +124,18 @@ void reverse_replace_tilda(string *path_adr){
  * @brief Open and read pre-logged history if it exists
  */
 void init_history(){
+    // Get absolute path to history file
     string hisfile = check_bad_alloc(strdup(HISTORY_NAME));
     replace_tilda(&hisfile);
 
     FILE *fptr = fopen(hisfile, "rb");
     if(fptr){
+        // Read history of last session
         fread(&KSH.history, sizeof(History), 1, fptr);
         fclose(fptr);
     }
     else{
+        // If no file exists, create an empty file & zero initialize history
         int fd = open(hisfile, O_RDWR | O_CREAT, 0600);
         close(fd);
         memset(&KSH.history, 0, sizeof(History));
@@ -172,17 +177,24 @@ void init(){
  * @details Writes history to disk storage and frees up resources
  */
 void cleanup(){
-    clrscr();
 
+    // Set terminal back to normal just in case we terminated during raw mode tty
+    disableRawMode();
+
+    // Save history to hisfile
     string hisfile = check_bad_alloc(strdup(HISTORY_NAME));
     replace_tilda(&hisfile);
-
     FILE *fptr = fopen(hisfile, "rb+");
+    
+    // Default behavior - If unable to open, maybe due to user deleting history file
+    // during execution, history of current session is simply not saved. File is created
+    // on next run.
     if(fptr){
         fwrite(&KSH.history, sizeof(History), 1, fptr);
         fclose(fptr);
     }
 
+    // Free globally available shell resources
     free(hisfile);
     free(KSH.username);
     free(KSH.hostname);
