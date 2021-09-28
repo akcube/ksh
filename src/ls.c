@@ -83,6 +83,9 @@ void __print_list_file(string filepath, string filename){
 	free(perms);
 }
 
+/**
+ * @return Returns the total block size as displayed by the ls command
+ */
 int64_t __get_total(string dirname, string_vector *v){
 	
 	int dirlen = strlen(dirname);
@@ -109,6 +112,11 @@ int64_t __get_total(string dirname, string_vector *v){
 	return total>>1;
 }
 
+/**
+ * @brief Parses arguments given to ls. 
+ * @details Sets the flags variable. Error checks invalid file paths. Populates
+ * files and directory vectors appropriately 
+ */
 int __ls_parse_arguments(Command *c, string_vector *directories, string_vector *files, uint8_t *FLAG){
 
 	uint8_t flags = 0;
@@ -169,18 +177,55 @@ int __ls_parse_arguments(Command *c, string_vector *directories, string_vector *
 	return dir_parsed;
 }
 
-void __print_single_files(string_vector &files){
+/**
+ * @brief Prints the file like ls does without the -l flag]
+ * 
+ * @param files Vector containing the file names
+ */
+void __print_single_files(string_vector *files, int flags){
 	
 	if(!files->size) return; // No files to output
 
 	// Output all singleton files 
-	for(int i=0; i<files.size; i++){
+	for(int i=0; i<files->size; i++){
 		if(LIST_FORMAT(flags))
-			__print_list_file(files.arr[i], files.arr[i]);
+			__print_list_file(files->arr[i], files->arr[i]);
 		else
-			printf("%s  ", files.arr[i]);
+			printf("%s  ", files->arr[i]);
 	}
 	printf("\n");
+}
+
+/**
+ * @brief Populates vector with files from directory
+ * @details Reads all required flags from directory as per the flags passed and
+ * pushes it into the list string vector
+ * 
+ * @param dirname Name of the directory to read files from
+ * @param list Pointer to vector to populate
+ */
+int __read_dir(string dirname, string_vector *list, int flags){
+	// Open directory
+	DIR *d;
+	if(check_perror("ls", (long long) (d = opendir(dirname)), 0)) return -1;
+
+	errno = 0; // Set errno to 0 so we can distinguish between end of stream and error
+	struct dirent *dir;
+	
+	// Populate all files into vector
+	create_vector(list, 4);
+	while((dir = readdir(d))){
+		if(IGNORE(dir->d_name, flags)) continue;
+		push_back(list, dir->d_name);
+	}
+	
+	// Handle errors and cleanup
+	if(check_perror("ls", closedir(d), -1)) return -1;
+	if(errno){
+		perror("ls");
+		return -1;
+	}
+	return 0;
 }
 
 // -------------------------------- Util functions --------------------------------
@@ -231,6 +276,11 @@ void __printdir_dfl(string_vector *v){
 }
 
 
+/**
+ * @brief The main ls function that is called when parser detects ls
+ * @details Parses flags, tries to mimic the ls command with support for the -l and -a
+ * flags. Handles errors and prints whatever it can safely. 
+ */
 int ls(Command *c){
 	// Init command state vars
 	uint8_t flags = 0;
@@ -251,7 +301,7 @@ int ls(Command *c){
 
 	__print_single_files(&files, flags);
 
-	if(list->size && directories->size) printf("\n"); // Pretty printing
+	if(files.size && directories.size) printf("\n"); // Pretty printing
 
 	// Iterate over all directories
 	for(int i=0; i<directories.size; i++){
@@ -263,27 +313,16 @@ int ls(Command *c){
 			}
 		}
 
-		// Open directory
-		DIR *d;
-		if(check_perror("ls", (long long) (d = opendir(directories.arr[i])), 0)) continue;
-
-		errno = 0; // Set errno to 0 so we can distinguish between end of stream and error
-		struct dirent *dir;
-		
-		// Populate all files into vector
+		// Read files into vector. Skip if error. 
 		string_vector list;
-		create_vector(&list, 4);
-		while((dir = readdir(d))){
-			if(IGNORE(dir->d_name, flags)) continue;
-			push_back(&list, dir->d_name);
-		}
-		if(errno) perror("ls");
+		if(__read_dir(directories.arr[i], &list, flags) == -1) continue;
 
 		// Sort all files irrespective of case for pretty printing
 		vec_sort(&list, CASE_INSENSITIVE_SORT);
 
 		// Print total number of blocks required
-		printf("total %ld\n", __get_total(directories.arr[i], &list));
+		if(LIST_FORMAT(flags))
+			printf("total %ld\n", __get_total(directories.arr[i], &list));
 
 		// Print directory contents
 		if(!LIST_FORMAT(flags))
@@ -295,7 +334,6 @@ int ls(Command *c){
 		destroy_vector(&list);
 		if(printf("\n") < 0) throw_error(PRINTF_FAIL);
 		if(i!=directories.size-1) if(printf("\n") < 0) throw_error(PRINTF_FAIL);
-		if(check_perror("ls", closedir(d), -1)) continue;
 	}
 
 	// Cleanup

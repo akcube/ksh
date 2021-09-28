@@ -63,13 +63,18 @@ void parse(string linebuf){
     if(empty) return;
     log_history(linebuf);
 
-    // Create dup string to easily check what the delim was
-    char *dup = check_bad_alloc(strdup(linebuf));
+    // Create dupl string to easily check what the delim was
+    char *dupl = check_bad_alloc(strdup(linebuf));
+    
+    // If the SIGCHLD handler memsets the linebuf to 0 we lose data required for
+    // sequential execution. Make a copy here to prevent that issue.
+    char *cpystr = check_bad_alloc(strdup(linebuf));
+
     char *delim = ";&";
     char *saveptr_p, *saveptr_c;
 
     // Read a single command, similar to the front of a queue
-    char *front = strtok_r(linebuf, delim, &saveptr_p);
+    char *front = strtok_r(cpystr, delim, &saveptr_p);
     Command command;
 
     // Iterate and execute all commands in the queue
@@ -82,8 +87,8 @@ void parse(string linebuf){
         // Fill in the Command struct with parsed data
         init_command(&command, token);
         token=strtok_r(NULL, delim, &saveptr_c);
-        int delim_pos = (int)(saveptr_c-linebuf);
-        command.runInBackground = (dup[delim_pos]=='&');
+        int delim_pos = (int)(saveptr_c-cpystr);
+        command.runInBackground = (dupl[delim_pos]=='&');
         if(token) 
             parse_args(&command, token);
 
@@ -91,5 +96,6 @@ void parse(string linebuf){
         execute(&command);
         destroy_command(&command);
     }
-    free(dup);
+    free(dupl);
+    free(cpystr);
 }
