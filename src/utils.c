@@ -35,7 +35,7 @@ void swapstring(string *a, string *b){
 /**
  * @brief Converts string to int
  *
- * @return -1 if any on-digit char is encountered. String must be an
+ * @return -1 if any non-digit char is encountered. String must be an
  * unsigned int. No errors are thrown on overflow.
  */
 int64_t string_to_int(string str){

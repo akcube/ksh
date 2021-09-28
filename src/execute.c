@@ -31,7 +31,6 @@ int execute(Command *c){
 		}
 		else{
         	// Run process
-			if(c->runInBackground) printf("%d\n", pid);
 			// If foreground process
 			if(!c->runInBackground){
 				int status;
@@ -54,6 +53,7 @@ int execute(Command *c){
 				signal(SIGTTOU, SIG_DFL);
 			}
 			else{
+				if(c->runInBackground) printf("%d\n", pid);
 				// Add background process to list of open background processes
 				insert_process(pid, c->name, &(KSH.plist.head));
 			}

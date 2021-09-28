@@ -121,6 +121,9 @@ string get_line(){
     return retval;
 }
 
+/**
+ * @brief Displays the prompt, reads input and calls the parser.
+ */
 int prompt(){
 	// Display prompt
     printf("<%s@%s:%s> ", KSH.username, KSH.hostname, KSH.promptdir);

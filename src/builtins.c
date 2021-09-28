@@ -14,14 +14,30 @@ bool is_builtin(char *name){
 	return false;
 }
 
+/**
+ * @brief Display the last x commands entered
+ * @details Default value for x = 20. Required 0 < x <= 20
+ */
 int history(Command *c){
+
+	// History can have at max 1 argument
 	if(c->argc > 1){
 		throw_error(TOO_MANY_ARGS);
 		return -1;
 	}
+
+	// We can at max show 20 / how much ever data we have in history at the moment
 	int toshow = min(KSH.history.used, 20);
 	if(c->argc==1)
 		toshow = min(toshow, (int) string_to_int(c->argv.arr[1]));
+
+	// Handle bad args
+	if(toshow <= 0){
+		printf("Number must be between 1 and 20.\n"); 
+		return -1;
+	}
+
+	// Print history
 	for(int i=toshow-1; i>=0; i--){
 		printf("%s\n", KSH.history.data[i]);
 	}
