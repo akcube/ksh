@@ -126,7 +126,9 @@ string get_line(){
  */
 int prompt(){
 	// Display prompt
-    printf("<%s@%s:%s> ", KSH.username, KSH.hostname, KSH.promptdir);
+    cprintf(FG_BLUE, 0, "<%s@%s:", KSH.username, KSH.hostname);
+    cprintf(FG_YELLOW, 0, "%s", KSH.promptdir);
+    cprintf(FG_BLUE, 0, "> ");
 
     // Read user command
     string linebuf = get_line();

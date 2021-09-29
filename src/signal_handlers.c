@@ -1,6 +1,8 @@
 #include "libs.h"
 #include "signal_handlers.h"
 
+
+// -------------------------------- Util functions --------------------------------
 /**
  * @brief Helper function to setup signal handlers using sigaction
  * 
@@ -17,14 +19,23 @@ void setup_sighandler(int SIG, void (*handler)(int, siginfo_t*, void*)){
 
 }
 
+void __thread_safe_display_prompt(){
+    char buf[4096];
+    sprintf(buf, FG_BLUE "<%s@%s:" FG_YELLOW "%s" FG_BLUE"> ", KSH.username, KSH.hostname, KSH.promptdir);
+    write(STDOUT_FILENO, buf, strlen(buf));
+    __thread_safe_reset_tty();
+}
+
+// -------------------------------- Util functions --------------------------------
+
 /**
  * @brief Handles receiving ctrl-c signals and ignores them
  */
 void ksh_ctrlc(int SIG, siginfo_t *info, void *){
-    char buf[1024];
-    write(1, "\n", strlen("\n"));
-    sprintf(buf, "<%s@%s:%s> ", KSH.username, KSH.hostname, KSH.promptdir);
-    write(1, buf, strlen(buf));
+    
+    write(STDOUT_FILENO, "\n", strlen("\n"));
+    __thread_safe_display_prompt();
+
     getline_pt = 0;
     if(getline_inp)
         memset(getline_inp, 0, MAX_COMMAND_LENGTH);
@@ -34,10 +45,10 @@ void ksh_ctrlc(int SIG, siginfo_t *info, void *){
  * @brief Handles receiving ctrl-z signals and ignores them
  */
 void ksh_ctrlz(int SIG, siginfo_t *info, void *){
-    char buf[1024];
-    write(1, "\n", strlen("\n"));
-    sprintf(buf, "<%s@%s:%s> ", KSH.username, KSH.hostname, KSH.promptdir);
-    write(1, buf, strlen(buf));
+
+    write(STDOUT_FILENO, "\n", strlen("\n"));
+    __thread_safe_display_prompt();
+
     getline_pt = 0;
     if(getline_inp)
         memset(getline_inp, 0, MAX_COMMAND_LENGTH);
@@ -54,7 +65,7 @@ void ksh_sigchld(int SIG, siginfo_t *info, void *f){
 
     // Output information to terminal only if it was a background process
     bool isBackground = false;
-    char buf[1024];
+    char buf[4096];
 
     // Reap all children zombie processes & output info about suspended processes as well
     while ((c_pid = waitpid(-1, &status, WNOHANG | WUNTRACED)) > 0) {
@@ -75,12 +86,11 @@ void ksh_sigchld(int SIG, siginfo_t *info, void *f){
             sprintf(buf, "\n%s with pid %d did not exit normally\n", process_name, c_pid);
             remove_process(c_pid, &(KSH.plist.head));
         }
-        write(1, buf, strlen(buf));
+        write(STDOUT_FILENO, buf, strlen(buf));
     }
     // Output prompt again only if interrupted by background process SIGCHLD
     if(isBackground){
-    	sprintf(buf, "<%s@%s:%s> ", KSH.username, KSH.hostname, KSH.promptdir);
-    	write(1, buf, strlen(buf));
+   	    __thread_safe_display_prompt();
     }
     getline_pt = 0;
     if(getline_inp)

@@ -10,13 +10,13 @@ LIBS=-lm
 
 # Add .h include files here
 _DEPS = libs.h error_handlers.h utils.h vector.h prompt.h parsing.h execute.h builtins.h ls.h proclist.h signal_handlers.h \
-		history.h
+		history.h colors.h
 
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
 # Add .o include file deps here
 _OBJ = error_handlers.o utils.o shell.o vector.o prompt.o parsing.o execute.o builtins.o ls.o proclist.o signal_handlers.o \
-		history.o
+		history.o colors.o
 
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 

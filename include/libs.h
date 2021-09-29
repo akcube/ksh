@@ -28,6 +28,7 @@
 #include<grp.h>
 #include<termios.h>
 #include<ctype.h>
+#include<stdarg.h>
 
 // Self-defined include files
 #include "proclist.h"
@@ -42,5 +43,6 @@
 #include "ls.h"
 #include "signal_handlers.h"
 #include "history.h"
+#include "colors.h"
 
 #endif
