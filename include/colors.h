@@ -36,6 +36,7 @@
 
 void __reset_tty_colors();
 void __thread_safe_reset_tty();
+void __thread_safe_display_prompt();
 void cprintf(string FG, string BG, string format, ...);
 void csprintf(char *buf, string FG, string BG, string format, ...);
 

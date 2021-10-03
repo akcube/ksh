@@ -19,13 +19,6 @@ void setup_sighandler(int SIG, void (*handler)(int, siginfo_t*, void*)){
 
 }
 
-void __thread_safe_display_prompt(){
-    char buf[4096];
-    sprintf(buf, FG_BLUE "<%s@%s:" FG_YELLOW "%s" FG_BLUE"> ", KSH.username, KSH.hostname, KSH.promptdir);
-    write(STDOUT_FILENO, buf, strlen(buf));
-    __thread_safe_reset_tty();
-}
-
 // -------------------------------- Util functions --------------------------------
 
 /**

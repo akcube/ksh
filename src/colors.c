@@ -40,3 +40,10 @@ void __thread_safe_reset_tty(){
 	write(STDOUT_FILENO, TTY_RESET, strlen(TTY_RESET));
 	write(STDOUT_FILENO, FG_WHITE, strlen(FG_WHITE));
 }
+
+void __thread_safe_display_prompt(){
+    char buf[4096];
+    sprintf(buf, FG_BLUE "<%s@%s:" FG_YELLOW "%s" FG_BLUE"> ", KSH.username, KSH.hostname, KSH.promptdir);
+    write(STDOUT_FILENO, buf, strlen(buf));
+    __thread_safe_reset_tty();
+}
