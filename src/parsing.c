@@ -6,9 +6,13 @@
  * @param command Pointer to the struct we want to initialize
  * @param name Pointer to the name of the command. Note that name is copied
  */
-void init_command(Command *command, char *name){
+void init_command(Command *command, string name){
     command->argc = 0;
     command->runInBackground = false;
+    command->infile = NULL;
+    command->outfile = NULL;
+    command->valid = true;
+    command->append = false;
     create_vector(&(command->argv), 2);
     command->name = check_bad_alloc(strdup(name));
     push_back(&(command->argv), name);
@@ -21,8 +25,46 @@ void init_command(Command *command, char *name){
 void destroy_command(Command *command){
     if(command->name) free(command->name);
     if((command->argv).size) destroy_vector(&(command->argv));
+    if(command->infile) free(command->infile);
+    if(command->outfile) free(command->outfile);
     command->argc = 0;
+    command->valid = false;
     command->runInBackground = false;
+    command->append = false;
+}
+
+/**
+ * @brief Checks for the given delim. If found, returns filepath string and removes
+ *        delim + next arg from argstring
+ * @details Sets valid to false on parse error
+ */
+string parseRedirect(Command *command, string argstr, char delim){
+
+    int n = strlen(argstr);
+    // Handle redirects first
+    int trim_begin = -1;
+    string filepath;
+    string ret = NULL;
+    for(int i=0; i<n; i++){
+        // If delim found
+        if(argstr[i]==delim){
+            trim_begin = i;
+            // Trim whitespace if necessary
+            while(i<n && (argstr[i]==delim || argstr[i]==' ')) i++;
+            // Obtain filepath
+            filepath = &argstr[i];
+            while(i<n && (isPOSIXFilechar(argstr[i]) || argstr[i]=='~')) i++;
+            argstr[i] = '\0';
+            if(ret || strlen(filepath) < 1) command->valid = false;
+            if(!ret) ret = check_bad_alloc(strdup(filepath));
+            // Remove from argstr
+            for(int j=trim_begin; j<=i && j<n; j++) argstr[j] = ' ';
+        }
+    }
+
+    if(ret)
+        replace_tilda(&ret);
+    return ret;
 }
 
 /**
@@ -34,6 +76,17 @@ void destroy_command(Command *command){
  * @param argstr string containing space separated arguments 
  */
 void parse_args(Command *command, string argstr){
+
+    // Check if redirection is append type
+    int n = strlen(argstr);
+    for(int i=0; i<n-1; i++)
+        if(argstr[i]=='>' && argstr[i+1]=='>') command->append = true;
+
+    // Assign redirection files
+    command->infile = parseRedirect(command, argstr, '<');
+    command->outfile = parseRedirect(command, argstr, '>');
+
+    // Push args to argv
     char *saveptr;
     char *token = strtok_r(argstr, " \t", &saveptr);
     for(;token!=NULL; token=strtok_r(NULL, " \t", &saveptr)){
@@ -43,6 +96,10 @@ void parse_args(Command *command, string argstr){
     }
     if(!is_builtin(command->name))
         push_back(&(command->argv), NULL);
+}
+
+void parsePipe(string cmd){
+
 }
 
 /**
@@ -79,6 +136,16 @@ void parse(string linebuf){
 
     // Iterate and execute all commands in the queue
     for(;front!=NULL; front=strtok_r(NULL, delim, &saveptr_p)){
+
+        // If command is actually a chain of piped commands, handle separately
+        bool hasPipe = false;
+        for(char *ptr=front; *ptr; ptr++)
+            hasPipe |= ((*ptr)=='|');
+
+        if(hasPipe){
+            parsePipe(front);
+            continue;
+        }
         
         // First arg is always the program name
         char *token = strtok_r(front, " \t", &saveptr_c);

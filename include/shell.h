@@ -25,13 +25,19 @@ typedef struct Shell{
 	uid_t uid;
 	ProcList plist;
 	History history;
+	int stdin, saved_stdin;
+	int stdout, saved_stdout;
 } Shell;
 
 typedef struct Command{
 	string name;
 	int argc;
 	string_vector argv;
+	string infile;
+	string outfile;
 	bool runInBackground;
+	bool append;
+	bool valid;
 } Command;
 
 // Declares it and makes it accessible in all files this header is included in

@@ -31,5 +31,6 @@ int64_t string_to_int(string str);
 int min(int a, int b);
 int max(int a, int b);
 void cleanup();
+bool isPOSIXFilechar(char c);
 
 #endif

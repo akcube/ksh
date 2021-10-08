@@ -24,6 +24,14 @@ int min(int a, int b) { return (a<b)?a:b; }
 int max(int a, int b) { return (a>b)?a:b; }
 
 /**
+ * @brief Checks if character belongs to the POSIX portable filename character set
+ * @detail https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap03.html#tag_03_282
+ */
+bool isPOSIXFilechar(char c){
+    return (isalnum(c) || c=='.' || c=='_' || c=='-');
+}
+
+/**
  * @brief Swap two strings
  */
 void swapstring(string *a, string *b){
@@ -159,6 +167,9 @@ void init(){
     KSH.curdir = get_cwd();
     KSH.lastdir = get_cwd();
     KSH.promptdir = get_prompt_dir();
+    KSH.saved_stdin = KSH.saved_stdout = -1;
+    KSH.stdin = STDIN_FILENO;
+    KSH.stdout = STDOUT_FILENO;
 
     // Initialize history
     init_history();
