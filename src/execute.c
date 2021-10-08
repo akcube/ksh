@@ -44,6 +44,10 @@ void cleanup_redirection(){
 	}
 }
 
+int exec_pipe(Pipe *p){
+	return 0;
+}
+
 /**
  * @brief Execute a Command
  * @details Handle builtins and other programs differently. If system
@@ -55,12 +59,6 @@ void cleanup_redirection(){
  * @return 0 if successful. -1 if failure.
  */
 int execute(Command *c){
-
-	// Output error if invalid command (parse error)
-	if(!c->valid){
-		throw_error(BAD_PARSE);
-		return -1;
-	}
 	
 	if(setup_redirection(c)) return -1;
 

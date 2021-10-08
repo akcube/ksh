@@ -34,6 +34,48 @@ void destroy_command(Command *command){
 }
 
 /**
+ * @brief Null initializes the pipe vars
+ */
+void init_pipe(Pipe *p){
+    p->c = NULL;
+    p->next = NULL;
+}
+
+/**
+ * @brief Frees all resources allocated by the pipe linked list
+ * @details Calls destroy command on all allocated commands and frees up memory used by pipe
+ */
+void destroy_pipe(Pipe *p){
+    Pipe *ptr;
+    while(p){
+        ptr = p->next;
+        if(p->c) destroy_command(p->c);
+        p->next = NULL;
+        free(p);
+        p = ptr;
+    }
+}
+
+/**
+ * @brief Adds the command to the pipe list
+ */
+void add_to_pipe(Pipe *p, Command *c){
+
+    // Base case, empty list
+    if(p->c == NULL){
+        p->c = c; return;
+    }
+
+    // Iterate to end of list
+    while(p->next) p = p->next;
+
+    // Allocate new node and make it point to command c
+    p->next = check_bad_alloc(malloc(sizeof(Pipe)));
+    init_pipe(p->next);
+    p->next->c = c;
+}
+
+/**
  * @brief Checks for the given delim. If found, returns filepath string and removes
  *        delim + next arg from argstring
  * @details Sets valid to false on parse error
@@ -98,8 +140,55 @@ void parse_args(Command *command, string argstr){
         push_back(&(command->argv), NULL);
 }
 
+/**
+ * @brief If input contains a pipe, parse specially
+ * @details Parses commands in the pipe one by one and populates a Pipe object
+ * list. If all commands in the pipe are valid then it calls exec_pipe.
+ */
 void parsePipe(string cmd){
 
+    // Create the pipe head
+    Pipe *p = check_bad_alloc(malloc(sizeof(Pipe)));
+    init_pipe(p);
+
+    // Initialize variables to pass to strtok & other namesakes
+    char *saveptr_p, *saveptr_c, *cmd_string;
+    char *token = strtok_r(cmd, "|", &saveptr_p);
+    Command *command;
+
+    // Separate pipe chain into individual commands
+    for(;token!=NULL; token=strtok_r(NULL, "|", &saveptr_p)){
+
+        // The first space separated token will be the program name + handle errors
+        cmd_string = strtok_r(token, " ", &saveptr_c);
+        if(!cmd_string){
+            throw_error(BAD_PARSE);
+            destroy_pipe(p);
+            return;
+        }
+
+        // Alloc mem for command and push to pipe list. destroy_pipe will handle freeing memory
+        command = check_bad_alloc(malloc(sizeof(Command)));
+        init_command(command, cmd_string);
+        cmd_string = strtok_r(NULL, " ", &saveptr_c);
+
+        if(cmd_string)
+            parse_args(command, cmd_string);
+        
+        add_to_pipe(p, command);
+    }
+
+    // Confirm all commands in pipe are valid before attempting execution
+    Pipe *ptr = p;
+    bool valid_pipe = true;
+    while(ptr){
+        valid_pipe &= ptr->c->valid;
+        ptr = ptr->next;
+    }
+    if(valid_pipe) exec_pipe(p);
+
+    // Cleanup
+    destroy_pipe(p);
 }
 
 /**
@@ -156,11 +245,17 @@ void parse(string linebuf){
         token=strtok_r(NULL, delim, &saveptr_c);
         int delim_pos = (int)(saveptr_c-cpystr);
         command.runInBackground = (dupl[delim_pos]=='&');
+
+
         if(token) 
             parse_args(&command, token);
 
+        // Output error if invalid command (parse error)
+        if(command.valid)
+            execute(&command);
+        else
+            throw_error(BAD_PARSE);
         // Execute and cleanup
-        execute(&command);
         destroy_command(&command);
     }
     free(dupl);

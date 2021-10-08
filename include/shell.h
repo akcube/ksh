@@ -40,6 +40,11 @@ typedef struct Command{
 	bool valid;
 } Command;
 
+typedef struct Pipe{
+	Command *c;
+	struct Pipe *next;
+} Pipe;
+
 // Declares it and makes it accessible in all files this header is included in
 extern Shell KSH;
 extern string getline_inp;
