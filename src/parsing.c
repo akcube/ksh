@@ -170,7 +170,7 @@ void parsePipe(string cmd){
         // Alloc mem for command and push to pipe list. destroy_pipe will handle freeing memory
         command = check_bad_alloc(malloc(sizeof(Command)));
         init_command(command, cmd_string);
-        cmd_string = strtok_r(NULL, " ", &saveptr_c);
+        cmd_string = strtok_r(NULL, "|", &saveptr_c);
 
         if(cmd_string)
             parse_args(command, cmd_string);
@@ -180,12 +180,14 @@ void parsePipe(string cmd){
 
     // Confirm all commands in pipe are valid before attempting execution
     Pipe *ptr = p;
+    int pipe_len = 0;
     bool valid_pipe = true;
     while(ptr){
         valid_pipe &= ptr->c->valid;
         ptr = ptr->next;
+        pipe_len++;
     }
-    if(valid_pipe) exec_pipe(p);
+    if(valid_pipe && pipe_len >= 2) exec_pipe(p);
 
     // Cleanup
     destroy_pipe(p);

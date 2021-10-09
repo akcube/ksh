@@ -190,7 +190,7 @@ void init(){
 void cleanup(){
 
     // Set terminal back to normal just in case we terminated during raw mode tty
-    disableRawMode();
+    // disableRawMode();
 
     // Save history to hisfile
     string hisfile = check_bad_alloc(strdup(HISTORY_NAME));

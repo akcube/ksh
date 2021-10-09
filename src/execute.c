@@ -45,7 +45,36 @@ void cleanup_redirection(){
 }
 
 int exec_pipe(Pipe *p){
-	return 0;
+	
+	int x = 0;
+	int pfds[2][2];
+
+	int ifd = dup(STDIN_FILENO);
+	int ofd = dup(STDOUT_FILENO);
+	int dummy;
+
+	if(check_perror("Pipe", pipe(pfds[x]), -1)) dummy=-1;
+	if(check_perror("Pipe", dup2(pfds[x][WRITE_END], STDOUT_FILENO), -1)) dummy=-1;
+	execute(p->c);
+	if(check_perror("Pipe", close(pfds[x][WRITE_END]), -1)) dummy=-1;
+
+	for(p = p->next, x ^= 1; p->next; p = p->next, x ^= 1){
+		if(check_perror("Pipe", pipe(pfds[x]), -1)) dummy=-1;
+		if(check_perror("Pipe", dup2(pfds[x^1][READ_END], STDIN_FILENO), -1)) dummy=-1;
+		if(check_perror("Pipe", dup2(pfds[x][WRITE_END], STDOUT_FILENO), -1)) dummy=-1;
+		execute(p->c);
+		if(check_perror("Pipe", close(pfds[x^1][READ_END]), -1)) dummy=-1;
+		if(check_perror("Pipe", close(pfds[x][WRITE_END]), -1)) dummy=-1;
+	}
+
+	if(check_perror("Pipe", dup2(pfds[x^1][READ_END], STDIN_FILENO), -1)) dummy=-1;
+	if(check_perror("Pipe", dup2(ofd, STDOUT_FILENO), -1)) dummy=-1;
+	execute(p->c);
+	if(check_perror("Pipe", close(pfds[x^1][READ_END]), -1)) dummy=-1;
+	if(check_perror("Pipe", dup2(ifd, STDIN_FILENO), -1)) dummy=-1;
+
+
+	return dummy;
 }
 
 /**
