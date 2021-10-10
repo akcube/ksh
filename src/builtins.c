@@ -1,8 +1,8 @@
 #include "libs.h"
 #include "builtins.h"
 
-char *builtins[] = {"cd", "pwd", "echo", "ls", "repeat", "pinfo", "history", "jobs", "sig", NULL};
-int (*jumptable[])(Command *c) = {cd, pwd, echo, ls, repeat, pinfo, history, jobs, sig};
+char *builtins[] = {"cd", "pwd", "echo", "ls", "repeat", "pinfo", "history", "jobs", "sig", "bg", NULL};
+int (*jumptable[])(Command *c) = {cd, pwd, echo, ls, repeat, pinfo, history, jobs, sig, bg};
 
 /**
  * @brief Check if the command is a builtin command
@@ -26,6 +26,40 @@ int exec_builtin(Command *c){
 	for(int id=0;(*builtin)!=NULL; builtin++, id++)
 		if(!strcmp(c->name, *builtin)) ret = (*jumptable[id])(c);
 	return ret;
+}
+
+/**
+ * @brief Changes state of a stopped background process to running in the background.
+ * @details Usage: `bg <job_num>`. Job number is the sequential unique number allotted to 
+ * a process executed by the shell. Can be obtained by calling `jobs`.
+ * 
+ * @return 0 on success. -1 on failure.
+ */
+int bg(Command *c){
+	// Bad args if command wasn't given exactly one argument.
+	// Usage `bg <job_number>`
+	if(c->argc != 1){
+		throw_error(BAD_ARGS); // Handle errors
+		return -1;
+	}
+
+	// Parse job number to int from args
+	int64_t job_num = string_to_int(c->argv.arr[1]);
+	if(job_num==-1){
+		throw_error(BAD_ARGS); // Handle errors
+		return -1;
+	}
+
+	// Get process id from the given job number
+	pid_t pid = get_process_id(job_num, &(KSH.plist.head));
+	if(pid == -1){
+		printf("Process with job number %ld does not exist.\n", job_num); // Handle errors
+		return -1;
+	}
+
+	// Send SIGCONT to the process
+	if(check_perror("sig", kill(pid, SIGCONT), -1)) return -1;
+	return 0;
 }
 
 /**

@@ -11,6 +11,7 @@ int pinfo(Command *c);
 int history(Command *c);
 int jobs(Command *c);
 int sig(Command *c);
+int bg(Command *c);
 
 typedef struct job{
 	uint64_t job_num;
