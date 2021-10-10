@@ -1,8 +1,8 @@
 #include "libs.h"
 #include "builtins.h"
 
-char *builtins[] = {"cd", "pwd", "echo", "ls", "repeat", "pinfo", "history", "jobs", NULL};
-int (*jumptable[])(Command *c) = {cd, pwd, echo, ls, repeat, pinfo, history, jobs};
+char *builtins[] = {"cd", "pwd", "echo", "ls", "repeat", "pinfo", "history", "jobs", "sig", NULL};
+int (*jumptable[])(Command *c) = {cd, pwd, echo, ls, repeat, pinfo, history, jobs, sig};
 
 /**
  * @brief Check if the command is a builtin command
@@ -26,6 +26,44 @@ int exec_builtin(Command *c){
 	for(int id=0;(*builtin)!=NULL; builtin++, id++)
 		if(!strcmp(c->name, *builtin)) ret = (*jumptable[id])(c);
 	return ret;
+}
+
+/**
+ * @brief Sends signal to process by job number
+ * @details Job number is the sequential unique number allotted to a process executed
+ * by the shell. Can be obtained by calling `jobs`. Command is of type
+ * `sig <job_number> <signal_number>`. Send signal `signal_number` to process
+ * 
+ * @return 0 on success. -1 on failure.
+ */
+int sig(Command *c){
+
+	// If command doesn't have exactly 2 arguments then we have bad args
+	// Usage `sig <job_number> <signal_number>`
+	if(c->argc!=2){
+		throw_error(BAD_ARGS);
+		return -1;
+	}
+
+	// Get job number and signal number from args
+	int64_t job_num = string_to_int(c->argv.arr[1]);
+	int sig_num = string_to_int(c->argv.arr[1]);
+	// Handle errors
+	if(job_num == -1 || sig_num == -1){
+		throw_error(BAD_ARGS);
+		return -1;
+	}
+
+	// Gets pid of process
+	pid_t pid = get_process_id(job_num, &(KSH.plist.head));
+	if(pid == -1){
+		printf("Process with job number %ld does not exist.\n", job_num); // Handle errors
+		return -1;
+	}
+
+	// Send signal to process
+	if(check_perror("sig", kill(pid, sig_num), -1)) return -1;
+	return 0;
 }
 
 #define JOBS_BIT_R (1<<0)

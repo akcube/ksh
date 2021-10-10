@@ -10,6 +10,7 @@ int repeat(Command *c);
 int pinfo(Command *c);
 int history(Command *c);
 int jobs(Command *c);
+int sig(Command *c);
 
 typedef struct job{
 	uint64_t job_num;

@@ -83,6 +83,23 @@ string get_process_name(pid_t id, Process **head){
 }
 
 /**
+ * @brief Returns the process pid given job_num of pcoess
+ * @param job_num Job number assigned to process by shell
+ * 
+ * @return pid of matching process on success, -1 on failure
+ */
+pid_t get_process_id(uint64_t job_num, Process **head){
+	struct Process *cur = *head;
+	while(cur!=NULL){
+		if(cur->job_num==job_num){
+			return cur->id;
+		}
+		cur = cur->next;	
+	}
+	return -1;
+}
+
+/**
  * @brief Returns the size of the linked list
  */
 uint32_t size(ProcList *ll){
@@ -100,6 +117,7 @@ void init_proclist(ProcList *ll){
 	ll->insert_process = &insert_process;
 	ll->get_process_name = &get_process_name;
 	ll->remove_process = &remove_process;
+	ll->get_process_id = &get_process_id;
 	ll->size = &size;
 	#ifdef DEBUG
 		ll->printList = &printList;

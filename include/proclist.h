@@ -14,6 +14,7 @@ typedef struct ProcList{
 	void (*insert_process)(int, char *s, struct Process **h);
 	int (*remove_process)(int id, Process **h);
 	char* (*get_process_name)(int id, Process **h);
+	pid_t (*get_process_id)(uint64_t job_num, Process **head);
 	uint32_t (*size)(struct ProcList *ll);
 	#ifdef DEBUG
 		void (*printList)(struct Process **h);
@@ -22,6 +23,7 @@ typedef struct ProcList{
 
 void init_proclist(ProcList *ll);
 char* get_process_name(int id, Process **head);
+pid_t get_process_id(uint64_t job_num, Process **head);
 void insert_process(int id, char *s, struct Process **head);
 int remove_process(int id, struct Process **head);
 void destroy_proclist(ProcList *ll);
