@@ -13,6 +13,7 @@ It's a shell
 1. Commands are only upto 4096 characters long. 
 2. History should not be deleted during shell execution. Will still function as normal but history will be lost.
 3. All commands **must** end with a `&` or `;` or `\n`
+4. I assume proccesses with state R and S only are "Running" processes
 
 ### Functionality
 
@@ -28,6 +29,13 @@ It's a shell
 - [x] Can repeat commands (even recursively!)
 - [x] Implements history
 - [x] Implements up arrow and bottom arrow key to access history dynamically
+- [x] Input output redirection
+- [x] Piping of multiple commands w/ redirection
+- [x] `jobs`
+- [x] `fg`, `bg` and `sig`
+- [x] Signal handlers
+- [x] Replay repeats commands in intervals of time t for a period p
+- [x] Baywatch command
 
 ### File structure
 `builtins.c` contains code for the builtin functions, except ls.
@@ -44,3 +52,4 @@ It's a shell
 `vector.c` contains code for a string vector object that supports pushback, top, dynamic reallocation for O(1) amortized insertion, and sorting. 
 
 They've been heavily commented and the functions should be mostly self explanatory. 
+
