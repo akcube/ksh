@@ -13,14 +13,14 @@ int setup_redirection(Command *c){
 
 	// If i redirect specified setup i redirect
 	if(c->infile){
-		if(check_perror("KSH", KSH.saved_stdin = dup(STDIN_FILENO), -1)) return -1;
 		if(check_perror("KSH", KSH.stdin = open(c->infile, r_flags, 0644), -1)) return -1;
+		if(check_perror("KSH", KSH.saved_stdin = dup(STDIN_FILENO), -1)) return -1;
 		if(check_perror("KSH", dup2(KSH.stdin, STDIN_FILENO), -1)) return -1;
 	}
 	// If o redirect specified setup o redirect
 	if(c->outfile){
-		if(check_perror("KSH", KSH.saved_stdout = dup(STDOUT_FILENO), -1)) return -1;
 		if(check_perror("KSH", KSH.stdout = open(c->outfile, w_flags, 0644), -1)) return -1;
+		if(check_perror("KSH", KSH.saved_stdout = dup(STDOUT_FILENO), -1)) return -1;
 		if(check_perror("KSH", dup2(KSH.stdout, STDOUT_FILENO), -1)) return -1;	
 	}
 	return 0;
