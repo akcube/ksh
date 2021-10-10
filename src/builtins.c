@@ -63,19 +63,23 @@ void *bw_interrupt(void *interval){
 	int t = *((int*)interval);
 	char *buf = NULL;
 	size_t buf_size = 0;
+	FILE *fptr = fopen("/proc/interrupts", "r");
+	getline(&buf, &buf_size, fptr);
+	printf(buf);
+	fclose(fptr);
 	while(1){
 		FILE *fptr = fopen("/proc/interrupts", "r");
-
-		getline(&buf, &buf_size, fptr);
-		printf(buf);
-		getline(&buf, &buf_size, fptr);
-		getline(&buf, &buf_size, fptr);
-
-		int n = strlen(buf);
-		for(int i=0; i<n-2; i++){
-			if(!strncmp(&buf[i], "1:", 2)){
-				buf[i] = buf[i+1] = ' ';
-				break;
+		bool found = false;
+		int n;
+		while(!found){
+			getline(&buf, &buf_size, fptr);
+			n = strlen(buf);
+			for(int i=0; i<n-2; i++){
+				if(!strncmp(&buf[i], "1:", 2)){
+					buf[i] = buf[i+1] = ' ';
+					found = true;
+					break;
+				}
 			}
 		}
 
@@ -103,7 +107,7 @@ void *bw_newborn(void *interval){
 
 	while(1){
 		int fd = open("/proc/loadavg", O_RDONLY);
-		read(fd, &buf, 4096);
+		read(fd, &buf, 4095);
 		char *saveptr, *token;
 
 		token = strtok_r(buf, " ", &saveptr);
@@ -348,12 +352,13 @@ int fg(Command *c){
 		return -1;
 	}
 
-	// Send SIGCONT to the process
-	if(check_perror("sig", kill(pid, SIGCONT), -1)) return -1;
 
 	int status; // Holder var	
 	// Moves process to foreground
 	make_fg_process(pid);
+	
+	// Send SIGCONT to the process
+	if(check_perror("sig", kill(pid, SIGCONT), -1)) return -1;
 
 	// Wait for process to stop / terminate
 	waitpid(pid, &status, WUNTRACED);
@@ -424,7 +429,7 @@ int sig(Command *c){
 
 	// Get job number and signal number from args
 	int64_t job_num = string_to_int(c->argv.arr[1]);
-	int sig_num = string_to_int(c->argv.arr[1]);
+	int sig_num = string_to_int(c->argv.arr[2]);
 	// Handle errors
 	if(job_num == -1 || sig_num == -1){
 		throw_error(BAD_ARGS);
@@ -532,9 +537,12 @@ int jobs(Command *c){
 		// Iterate through contents to get the STAT_STATUS argument
 		char *saveptr, status;
 		char *token = strtok_r(buf, " ", &saveptr);
-		for(int argno=1; token; token=strtok_r(NULL, " ", &saveptr), argno++)
-			if(argno==STAT_STATUS) 
+		for(int argno=1; token; token=strtok_r(NULL, " ", &saveptr), argno++){
+			if(argno==STAT_STATUS){
 				status = token[0];
+				break;
+			}
+		}
 		
 		// Include in array if flags agree with state
 		if((IS_RUNNING(status) && INCLUDE_RUNNING(flags)) || (IS_STOPPED(status) && INCLUDE_STOPPED(flags))){
@@ -648,7 +656,7 @@ int pinfo(Command *c){
 	for(int argno=1; token; token=strtok_r(NULL, " ", &saveptr), argno++){
 		if(argno==STAT_STATUS) status = token[0];
 		if(argno==STAT_PGRPID) pgrp_id = string_to_int(token);
-		if(argno==STAT_VMSIZE) memory_used = string_to_int(token);
+		if(argno==STAT_VMSIZE) { memory_used = string_to_int(token); break; }
 	}
 
 	// If pgrpid == foreground group id, set foreground process

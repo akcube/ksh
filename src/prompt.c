@@ -28,7 +28,7 @@ void enableRawMode() {
 
 // TODO: Make this look nicer :)
 string get_line(){
-    getline_inp = malloc(sizeof(char) * MAX_COMMAND_LENGTH);
+    getline_inp = check_bad_alloc(malloc(sizeof(char) * MAX_COMMAND_LENGTH));
     char c;
     char *retval = getline_inp;
     setbuf(stdout, NULL);
@@ -138,6 +138,7 @@ int prompt(){
     if(linebuf[0]!='\0') parse(linebuf);
 
     free(linebuf);
+    getline_inp = NULL;
     linebuf = NULL;
     return 1;
 }	
