@@ -32,5 +32,7 @@ int min(int a, int b);
 int max(int a, int b);
 void cleanup();
 bool isPOSIXFilechar(char c);
+void make_fg_process(pid_t pid);
+void make_fg_parent();
 
 #endif

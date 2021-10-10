@@ -117,14 +117,9 @@ int execute(Command *c){
 			// If foreground process
 			if(!c->runInBackground){
 				int status;
-				// Set process group in parent as well to avoid race condition
-				setpgid(pid, 0);
-
-				// Ignore TTIN & TTOUT signals while it is in foreground & give it foreground gpid
-				signal(SIGTTIN, SIG_IGN);
-				signal(SIGTTOU, SIG_IGN);	
-				tcsetpgrp(STDIN_FILENO, pid);
-
+				
+				// Move process to foreground
+				make_fg_process(pid);
 				// Wait for termination
 				waitpid(pid, &status, WUNTRACED);
 
@@ -135,13 +130,8 @@ int execute(Command *c){
 					remove_process(pid, &(KSH.plist.head));
 					status = (WIFEXITED(status)) ? WEXITSTATUS(status) : WTERMSIG(status);
 				}
-				
-				// Set parent back to foreground process gid
-				tcsetpgrp(STDIN_FILENO, getpgid(0));	
-
-				// Set TTIN & TTOUT handlers back to default
-				signal(SIGTTIN, SIG_DFL);
-				signal(SIGTTOU, SIG_DFL);
+				// Make parent the foreground process again
+				make_fg_parent();
 			}
 			else{
 				if(c->runInBackground) printf("%d\n", pid);

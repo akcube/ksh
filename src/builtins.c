@@ -1,8 +1,8 @@
 #include "libs.h"
 #include "builtins.h"
 
-char *builtins[] = {"cd", "pwd", "echo", "ls", "repeat", "pinfo", "history", "jobs", "sig", "bg", NULL};
-int (*jumptable[])(Command *c) = {cd, pwd, echo, ls, repeat, pinfo, history, jobs, sig, bg};
+char *builtins[] = {"cd", "pwd", "echo", "ls", "repeat", "pinfo", "history", "jobs", "sig", "bg", "fg", NULL};
+int (*jumptable[])(Command *c) = {cd, pwd, echo, ls, repeat, pinfo, history, jobs, sig, bg, fg};
 
 /**
  * @brief Check if the command is a builtin command
@@ -26,6 +26,49 @@ int exec_builtin(Command *c){
 	for(int id=0;(*builtin)!=NULL; builtin++, id++)
 		if(!strcmp(c->name, *builtin)) ret = (*jumptable[id])(c);
 	return ret;
+}
+
+int fg(Command *c){
+	// Bad args if command wasn't given exactly one argument.
+	// Usage `fg <job_number>`
+	if(c->argc != 1){
+		throw_error(BAD_ARGS); // Handle errors
+		return -1;
+	}
+
+	// Parse job number to int from args
+	int64_t job_num = string_to_int(c->argv.arr[1]);
+	if(job_num==-1){
+		throw_error(BAD_ARGS); // Handle errors
+		return -1;
+	}
+
+	// Get process id from the given job number
+	pid_t pid = get_process_id(job_num, &(KSH.plist.head));
+	if(pid == -1){
+		printf("Process with job number %ld does not exist.\n", job_num); // Handle errors
+		return -1;
+	}
+
+	int status; // Holder var
+	
+	// Moves process to foreground
+	make_fg_process(pid);
+
+	// Wait for process to stop / terminate
+	waitpid(pid, &status, WUNTRACED);
+
+	// If it was suspended, don't remove from proc list
+	if(WIFSTOPPED(status)) status = WSTOPSIG(status);
+	// If it was terminated, remove from proc list and return appropriate status
+	else if(WIFEXITED(status) || WIFSIGNALED(status)){
+		remove_process(pid, &(KSH.plist.head));
+		status = (WIFEXITED(status)) ? WEXITSTATUS(status) : WTERMSIG(status);
+	}
+
+	// Set parent back to foreground process
+	make_fg_parent();
+	return status;
 }
 
 /**

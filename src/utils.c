@@ -41,6 +41,31 @@ void swapstring(string *a, string *b){
 }
 
 /**
+ * @brief Make the process with given pid the foreground process safely
+ * @param pid pid of process we are making the foreground process
+ */
+void make_fg_process(pid_t pid){
+    // Give the process its own process group
+    setpgid(pid, 0);
+    // Ignore SIGTTIN & SIGTTOU so shell doesn't get suspended
+    signal(SIGTTIN, SIG_IGN);
+    signal(SIGTTOU, SIG_IGN);   
+    // Set the process gpid to foreground gpid
+    tcsetpgrp(STDIN_FILENO, pid);
+}
+
+/**
+ * @brief Makes the calling process the foreground process again
+ */
+void make_fg_parent(){
+    // Set parent back to foreground process gid
+    tcsetpgrp(STDIN_FILENO, getpgid(0));    
+    // Set TTIN & TTOUT handlers back to default
+    signal(SIGTTIN, SIG_DFL);
+    signal(SIGTTOU, SIG_DFL);
+}
+
+/**
  * @brief Converts string to int
  *
  * @return -1 if any non-digit char is encountered. String must be an
