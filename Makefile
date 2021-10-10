@@ -6,7 +6,7 @@ CFLAGS=-I$(IDIR) -Wall -Werror -D DEBUG
 ODIR=$(SDIR)/obj
 LDIR =lib
 
-LIBS=-lm
+LIBS=-lm -pthread
 
 # Add .h include files here
 _DEPS = libs.h error_handlers.h utils.h vector.h prompt.h parsing.h execute.h builtins.h ls.h proclist.h signal_handlers.h \

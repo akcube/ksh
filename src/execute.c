@@ -9,6 +9,7 @@ int setup_redirection(Command *c){
 
 	// Special case, replay does not require this
 	if(!strcmp(c->name, "replay")) return 0;
+	if(!strcmp(c->name, "baywatch") && (c->infile || c->outfile)) return 2;
 
 	// Required flags for i/o redirection
 	int r_flags = O_RDONLY;
@@ -61,7 +62,7 @@ int exec_pipe(Pipe *p){
 	// Save stdin and stdout for later
 	int ifd = dup(STDIN_FILENO);
 	int ofd = dup(STDOUT_FILENO);
-	int status;
+	int status = 0;
 
 	// Create the first pipe and make stdout refer to pipe write
 	if(check_perror("Pipe", pipe(pfds[x]), -1)) status=-1;
@@ -103,7 +104,12 @@ int exec_pipe(Pipe *p){
  */
 int execute(Command *c){
 	
-	if(setup_redirection(c)) return -1;
+	int retvalue;
+	if((retvalue = setup_redirection(c))){
+		if(retvalue==2)
+			throw_error(BAD_ARGS);
+		return -1;
+	}
 
 	int status = -1;
 	// Check if system command

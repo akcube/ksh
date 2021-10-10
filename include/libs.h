@@ -29,6 +29,7 @@
 #include<termios.h>
 #include<ctype.h>
 #include<stdarg.h>
+#include<pthread.h>
 
 // Self-defined include files
 #include "proclist.h"

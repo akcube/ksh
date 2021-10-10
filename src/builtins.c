@@ -2,8 +2,9 @@
 #include "builtins.h"
 
 char *builtins[] = {"cd", "pwd", "echo", "ls", "repeat", "pinfo", "history", 
-					"jobs", "sig", "bg", "fg", "replay", NULL};
-int (*jumptable[])(Command *c) = {cd, pwd, echo, ls, repeat, pinfo, history, jobs, sig, bg, fg, replay};
+					"jobs", "sig", "bg", "fg", "replay", "baywatch", NULL};
+int (*jumptable[])(Command *c) = {cd, pwd, echo, ls, repeat, pinfo, history, jobs, sig, bg, fg, replay, baywatch};
+
 
 /**
  * @brief Check if the command is a builtin command
@@ -27,6 +28,155 @@ int exec_builtin(Command *c){
 	for(int id=0;(*builtin)!=NULL; builtin++, id++)
 		if(!strcmp(c->name, *builtin)) ret = (*jumptable[id])(c);
 	return ret;
+}
+
+/**
+ * @brief Prints the size of the memory which is dirty.
+ * @details Reads information from the `Dirty:` column in /proc/meminfo. 
+ * Infinite loop sleeping in intervals of t.
+ */
+void *bw_dirty(void *interval){
+	int t = *((int*)interval);
+	char *buf = NULL;
+	size_t buf_size = 0;
+	while(1){
+		FILE *fptr = fopen("/proc/meminfo", "r");
+
+		while(getline(&buf, &buf_size, fptr)){
+			if(!strncmp(buf, "Dirty:", 6)){
+				printf("%s", &buf[6]);
+				break;
+			}
+		}
+		fclose(fptr);
+		sleep(t);
+	}
+}
+
+/**
+ * @brief Prints the number of times the CPU(s) has(ve) been interrupted by the 
+ * keyboardcontroller (i8042 with IRQ 1).
+ * @details Reads 1st line of info in /proc/interrupts. Infinite loop sleeping
+ * in intervals of t.
+ */
+void *bw_interrupt(void *interval){
+	int t = *((int*)interval);
+	char *buf = NULL;
+	size_t buf_size = 0;
+	while(1){
+		FILE *fptr = fopen("/proc/interrupts", "r");
+
+		getline(&buf, &buf_size, fptr);
+		printf(buf);
+		getline(&buf, &buf_size, fptr);
+		getline(&buf, &buf_size, fptr);
+
+		int n = strlen(buf);
+		for(int i=0; i<n-2; i++){
+			if(!strncmp(&buf[i], "1:", 2)){
+				buf[i] = buf[i+1] = ' ';
+				break;
+			}
+		}
+
+		for(int i=0; i<n; i++){
+			if(isspace(buf[i]) || isdigit(buf[i]))
+				printf("%c", buf[i]);
+			else break;
+		}
+		printf("\n");
+
+		fclose(fptr);
+		sleep(t);
+	}
+	return 0;
+}
+
+/**
+ * @brief Prints the pid of the process that was most recently created on the system
+ * @details Reads info from the 5th argument in /proc/loadavg. Infinite loop sleeping
+ * in intervals of t.
+ */
+void *bw_newborn(void *interval){ 
+	int t = *((int*)interval);
+	char buf[4096];
+
+	while(1){
+		int fd = open("/proc/loadavg", O_RDONLY);
+		read(fd, &buf, 4096);
+		char *saveptr, *token;
+
+		token = strtok_r(buf, " ", &saveptr);
+		for(int i=1; i<5; i++)
+			token = strtok_r(NULL, " ", &saveptr);
+		printf(token);
+		close(fd);
+		sleep(t);
+	}
+}
+
+#define BAYWATCH_DIRTY 0
+#define BAYWATCH_INTERRUPT 1
+#define BAYWATCH_NEWBORN 2
+void* (*baywatch_jt[])(void *) = {bw_dirty, bw_interrupt, bw_newborn};
+
+/**
+ * @brief Similar to the watch command. Will display last ran thread, dirty memory or
+ * interrupts from i8042 with IRQ1 as specified by the flag at intervals of `n` seconds
+ * until the key `q` is pressed 
+ */
+int baywatch(Command *c){
+
+	// Function must have 3 arguments
+	if(c->argc != 3){
+		throw_error(BAD_ARGS); return -1;
+	}
+
+	// Parse possible locations of `-n` flag
+	int ndex = -1;
+	if(!strncmp(c->argv.arr[1], "-n", 2)) ndex = 1;
+	else if(!strncmp(c->argv.arr[2], "-n", 2)) ndex = 2;
+
+	if(ndex==-1){
+		throw_error(BAD_ARGS); return -1;
+	}
+
+	// Get interval time
+	int interval = string_to_int(c->argv.arr[ndex+1]);
+	if(interval==-1){
+		throw_error(BAD_ARGS); return -1;
+	}
+
+	// Parse command type
+	string type = (ndex==1)?c->argv.arr[3]:c->argv.arr[1];
+
+	int COMMAND = -1;
+	if(!strcmp(type, "dirty")) COMMAND = BAYWATCH_DIRTY;
+	else if(!strcmp(type, "interrupt")) COMMAND = BAYWATCH_INTERRUPT;
+	else if(!strcmp(type, "newborn")) COMMAND = BAYWATCH_NEWBORN;
+
+	if(COMMAND==-1) {
+		puts("Invalid command. The options available to you are [dirty, newborn, interrupt].");
+		return -1;
+	}
+
+	// Create a new thread where the watcher will output contents 
+	pthread_t newthread;
+	pthread_create(&newthread, NULL, baywatch_jt[COMMAND], &interval);
+
+	// Enable raw mode so we can setup a listener for the `q` key
+	enableRawMode();
+	char ch;
+	// Check for `q` press
+	while(read(STDIN_FILENO, &ch, 1)==1){
+		if(ch=='q'){
+			pthread_cancel(newthread);
+			break;
+		}
+	}
+	// Set terminal back to normal
+	disableRawMode();
+	return 0;
 }
 
 #define INTERVAL_BIT (1<<0)
