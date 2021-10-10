@@ -170,6 +170,7 @@ void init(){
     KSH.saved_stdin = KSH.saved_stdout = -1;
     KSH.stdin = STDIN_FILENO;
     KSH.stdout = STDOUT_FILENO;
+    KSH.jobs_spawned = 0;
 
     // Initialize history
     init_history();

@@ -27,6 +27,7 @@ typedef struct Shell{
 	History history;
 	int stdin, saved_stdin;
 	int stdout, saved_stdout;
+	uint64_t jobs_spawned;
 } Shell;
 
 typedef struct Command{

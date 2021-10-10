@@ -1,8 +1,8 @@
 #include "libs.h"
 #include "builtins.h"
 
-char *builtins[] = {"cd", "pwd", "echo", "ls", "repeat", "pinfo", "history", NULL};
-int (*jumptable[])(Command *c) = {cd, pwd, echo, ls, repeat, pinfo, history};
+char *builtins[] = {"cd", "pwd", "echo", "ls", "repeat", "pinfo", "history", "jobs", NULL};
+int (*jumptable[])(Command *c) = {cd, pwd, echo, ls, repeat, pinfo, history, jobs};
 
 /**
  * @brief Check if the command is a builtin command
@@ -12,6 +12,144 @@ bool is_builtin(char *name){
 	for(;(*builtin)!=NULL; builtin++)
 		if(!strcmp(name, *builtin)) return true;
 	return false;
+}
+
+/**
+ * @brief Execute a builtin command
+ *
+ * @param c MUST be a builtin command, or will sigsev. Check with is_builtin first.
+ * @return Returns 0 on successful execution. -1 on failure.
+ */
+int exec_builtin(Command *c){
+	char **builtin = builtins;
+	int ret = -1;
+	for(int id=0;(*builtin)!=NULL; builtin++, id++)
+		if(!strcmp(c->name, *builtin)) ret = (*jumptable[id])(c);
+	return ret;
+}
+
+#define JOBS_BIT_R (1<<0)
+#define JOBS_BIT_S (1<<1)
+#define INCLUDE_RUNNING(X) (X & JOBS_BIT_R)
+#define INCLUDE_STOPPED(X) (X & JOBS_BIT_S)
+#define IS_STOPPED(X) (X!='R' && X!='S')
+#define IS_RUNNING(X) (X=='R' || X=='S')
+
+/**
+ * @brief Util function to parse arguments given to 'jobs' command
+ * @details Checks for the -r and -s flags and toggles appropriate bits in flags
+ * 
+ * @return 0 on success, -1 if bad args are encountered
+ */
+int __jobs_parse_arguments(Command *c, uint8_t *flags){
+	uint8_t f = 0;
+
+	// If no flags passed, default is printing all jobs
+	if(c->argc == 0){
+		*flags = JOBS_BIT_R | JOBS_BIT_S;
+		return 0;
+	}
+	// Iterate through all args
+	for(int i=1; i<=c->argc; i++){
+		// Argument must be a flag parameter
+		if(c->argv.arr[i][0] == '-'){
+			// Iterate through flags & toggle flag bits as necessary / handle errors
+			for(char *ptr=c->argv.arr[i]+1; *ptr; ptr++){
+				switch(*ptr){
+					case 'r':
+						f |= JOBS_BIT_R; // Include running jobs
+					break;
+					case 's':
+						f |= JOBS_BIT_S; // Include sleeping jobs
+					break;
+					default:
+						throw_error(BAD_PARSE);
+						return -1;
+				}
+			}
+		}
+		else{
+			throw_error(BAD_FLAGS);
+			return -1;
+		}
+	}
+	*flags = f;
+	return 0;
+}
+
+/**
+ * @brief Case insensitive comparator function for sorting jobs by name
+ */
+int jobs_cmp(const void *a, const void *b){
+	job *p = (job*) a;
+	job *q = (job*) b;
+	return strcasecmp(p->name, q->name);
+}
+
+/**
+ * @brief Prints a list of all running & sleeping processes with job num and pid
+ * 
+ * @details Accepts flags -r and -s for including running and sleeping processes
+ * respectively. Job number is a sequential number for jobs dispatched by the shell
+ * and can be used to uniquely identify processes started by the current instaance of 
+ * the shell
+ */
+int jobs(Command *c){
+	// Read flag arguments
+	uint8_t flags = 0;
+	if(__jobs_parse_arguments(c, &flags)==-1) return -1;
+
+	// Allocate enough space for array to hold the jobs and init iterator vars
+	uint32_t list_size = KSH.plist.size(&KSH.plist);
+	job *jlist = check_bad_alloc(calloc(list_size, sizeof(job)));
+	char buf[4096];
+	uint32_t jdex = 0;
+	int fd = -1;
+
+	// Pointer to head of proc list
+	Process *p = KSH.plist.head;
+	for(; p; p=p->next){
+		// Query the /proc/pid/stat file for information regarding execution state
+		sprintf(buf, "/proc/%d/stat", p->id);
+		if(check_perror("Jobs", fd = open(buf, O_RDONLY), -1)) continue;
+		if(check_perror("Jobs", read(fd, buf, 4096), -1)) continue;
+		
+		// Iterate through contents to get the STAT_STATUS argument
+		char *saveptr, status;
+		char *token = strtok_r(buf, " ", &saveptr);
+		for(int argno=1; token; token=strtok_r(NULL, " ", &saveptr), argno++)
+			if(argno==STAT_STATUS) 
+				status = token[0];
+		
+		// Include in array if flags agree with state
+		if((IS_RUNNING(status) && INCLUDE_RUNNING(flags)) || (IS_STOPPED(status) && INCLUDE_STOPPED(flags))){
+			jlist[jdex].name = check_bad_alloc(strdup(p->str));
+			jlist[jdex].job_num = p->job_num;
+			jlist[jdex].pid = p->id;
+			jlist[jdex++].status = status;
+		}
+
+		// Close file
+		check_perror("Jobs", close(fd), -1);
+	}
+
+	// Sort list by name
+	qsort(jlist, jdex, sizeof(job), jobs_cmp);
+
+	// Print the list
+	for(int i=0; i<jdex; i++){
+		printf("[%ld] ", jlist[i].job_num);
+		printf("%s ", ((IS_STOPPED(jlist[i].status))?"Stopped":"Running"));
+		printf("%s ", jlist[i].name);
+		printf("[%d]\n", jlist[i].pid);
+	}
+
+	// Cleanup
+	for(int i=0; i<jdex; i++)
+		free(jlist[i].name);
+	free(jlist);
+
+	return 0;	
 }
 
 /**
@@ -97,8 +235,6 @@ int pinfo(Command *c){
 		if(argno==STAT_PGRPID) pgrp_id = string_to_int(token);
 		if(argno==STAT_VMSIZE) memory_used = string_to_int(token);
 	}
-	// Close file
-	if(check_perror("pinfo", close(fd), -1)) return -1;
 
 	// If pgrpid == foreground group id, set foreground process
 	status_activity = (pgrp_id==tcgetpgrp(0)) ? '+':'-';
@@ -118,6 +254,9 @@ int pinfo(Command *c){
     // Cleanup
 	free(buf);
 	free(query);
+
+	// Close file
+	if(check_perror("pinfo", close(fd), -1)) return -1;
 	return 0;
 }
 
@@ -158,19 +297,6 @@ int repeat(Command *c){
 	return 0;
 }
 
-/**
- * @brief Execute a builtin command
- *
- * @param c MUST be a builtin command, or will sigsev. Check with is_builtin first.
- * @return Returns 0 on successful execution. -1 on failure.
- */
-int exec_builtin(Command *c){
-	char **builtin = builtins;
-	int ret = -1;
-	for(int id=0;(*builtin)!=NULL; builtin++, id++)
-		if(!strcmp(c->name, *builtin)) ret = (*jumptable[id])(c);
-	return ret;
-}
 
 /**
  * @brief Builtin implementation of echo

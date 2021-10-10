@@ -9,5 +9,13 @@ int echo(Command *c);
 int repeat(Command *c);
 int pinfo(Command *c);
 int history(Command *c);
+int jobs(Command *c);
+
+typedef struct job{
+	uint64_t job_num;
+	pid_t pid;
+	char *name;
+	char status;
+} job;
 
 #endif
