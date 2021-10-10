@@ -1,8 +1,9 @@
 #include "libs.h"
 #include "builtins.h"
 
-char *builtins[] = {"cd", "pwd", "echo", "ls", "repeat", "pinfo", "history", "jobs", "sig", "bg", "fg", NULL};
-int (*jumptable[])(Command *c) = {cd, pwd, echo, ls, repeat, pinfo, history, jobs, sig, bg, fg};
+char *builtins[] = {"cd", "pwd", "echo", "ls", "repeat", "pinfo", "history", 
+					"jobs", "sig", "bg", "fg", "replay", NULL};
+int (*jumptable[])(Command *c) = {cd, pwd, echo, ls, repeat, pinfo, history, jobs, sig, bg, fg, replay};
 
 /**
  * @brief Check if the command is a builtin command
@@ -28,6 +29,16 @@ int exec_builtin(Command *c){
 	return ret;
 }
 
+int replay(Command *c){
+	
+}
+
+/**
+ * @brief Brings a running/suspended background process to the foreground and 
+ * changes state to running.
+ * 
+ * @return Suspension / exit code returned by process. -1 on parse failure.
+ */
 int fg(Command *c){
 	// Bad args if command wasn't given exactly one argument.
 	// Usage `fg <job_number>`
@@ -50,8 +61,10 @@ int fg(Command *c){
 		return -1;
 	}
 
-	int status; // Holder var
-	
+	// Send SIGCONT to the process
+	if(check_perror("sig", kill(pid, SIGCONT), -1)) return -1;
+
+	int status; // Holder var	
 	// Moves process to foreground
 	make_fg_process(pid);
 

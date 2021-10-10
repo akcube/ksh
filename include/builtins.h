@@ -13,6 +13,7 @@ int jobs(Command *c);
 int sig(Command *c);
 int bg(Command *c);
 int fg(Command *c);
+int replay(Command *c);
 
 typedef struct job{
 	uint64_t job_num;
