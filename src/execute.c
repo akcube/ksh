@@ -8,7 +8,7 @@
 int setup_redirection(Command *c){
 
 	// Special case, replay does not require this
-	if(!strcmp(c->name, "replay")) return 0;
+	if(!strcmp(c->name, "replay") || !strcmp(c->name, "repeat")) return 0;
 	if(!strcmp(c->name, "baywatch") && (c->infile || c->outfile)) return 2;
 
 	// Required flags for i/o redirection

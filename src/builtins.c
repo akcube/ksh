@@ -702,6 +702,11 @@ int repeat(Command *c){
 		package.argc++;
 	}
 	if(!is_builtin(package.name)) push_back(&(package.argv), NULL);
+	if(c->infile)
+		package.infile = check_bad_alloc(strdup(c->infile));
+	if(c->outfile)
+		package.outfile = check_bad_alloc(strdup(c->outfile));
+	package.append = c->append;
 
 	// Execute the command in a loop n times
 	for(int i=0; i<n; i++)
