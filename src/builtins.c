@@ -29,8 +29,145 @@ int exec_builtin(Command *c){
 	return ret;
 }
 
-int replay(Command *c){
+#define INTERVAL_BIT (1<<0)
+#define PERIOD_BIT (1<<1)
+#define COMMAND_BIT (1<<2)
+#define ILEN strlen("-interval ")
+#define PLEN strlen("-period ")
+#define CLEN strlen("-command ")
+#define REPLAY_PARSE_SUCCESS(X) (X==7)
+
+/**
+ * @brief Util function for replay parser to parse commands.
+ * @return 0 on success, -1 on failure.
+ */
+int __parse_replay_util(string cmd, int pos, int n, int LEN){
 	
+	int num_end, j, ret;
+	// Erase -<flag> from command
+	for(j=pos; j<pos+LEN; j++) cmd[j] = ' ';
+
+	// Find the next argument
+	while(j < n && cmd[j]==' ') j++;
+	if(j==n) return -1; // No argument after -<flag>
+	
+	// Isolate the next argument and parse it to an int
+	num_end = j;
+	while(num_end < n && cmd[num_end] != ' ') num_end++;
+	cmd[num_end] = '\0';
+	ret = string_to_int(&cmd[j]);
+
+	// Erase the number from the string
+	for(;j<n && j<=num_end; j++) cmd[j] = ' ';
+
+	return ret;
+}
+
+/**
+ * @brief Parses the arguments given to replay. Stores interval & period in 
+ * pointers passed to the two integers
+ * 
+ * @return 0 on success, -1 on failure.
+ */
+int __parse_replay_args(string cmd, int *interval, int *period){
+	
+	// Holder vars
+	int n = strlen(cmd);
+	int status = 0;
+
+	// If we see the two flags, obtain integer values and erase from cmd string
+	for(int i=0; i<n; i++){
+		if(cmd[i] == '-'){
+			if(!strncmp(&cmd[i], "-interval ", ILEN)){
+				status |= INTERVAL_BIT; 
+				*interval = __parse_replay_util(cmd, i, n, ILEN);
+				if(*interval==-1) return -1;
+			}
+			else if(!strncmp(&cmd[i], "-period ", PLEN)){
+				status |= PERIOD_BIT;
+				*period = __parse_replay_util(cmd, i, n, PLEN);
+				if(*period==-1) return -1;
+			}
+		}
+	}
+
+	// Check if -command flag is found. It must be at the beginning after removal of 
+	// other flags. If found remove from cmd string.
+	for(int i=0; i<n; i++){
+		if(cmd[i]==' ') continue;
+		if(!strncmp(&cmd[i], "-command ", CLEN)){
+			status |= COMMAND_BIT;
+			for(int j=i; j<i+CLEN; j++) 
+				cmd[j] = ' ';
+			break;
+		}
+		else return -1;
+	}
+
+	// If all three flags were found, success
+	if(status==7) return 0;
+	else return -1;
+}
+
+/**
+ * @brief Executes a particular command in fixed time interval for a certain period.
+ * @details Best explained with an example. `replay -command echo "hi" -interval 3 -period 6`
+ * This command will execute echo "hi" command after every 3 seconds until 6 seconds are 
+ * elapsed. In this example, echo "hi" command will be executed 2 times, once after 3 seconds 
+ * and then after 6 seconds.
+ *
+ * @return 0 on success. -1 on failure.
+ */
+int replay(Command *c){
+
+	// Usage: replay -command <command> -interval <time period> -period <time>
+	// Requires: min 6 args
+	if(c->argc < 6){
+		throw_error(TOO_LESS_ARGS); return -1;
+	}
+
+	// For this command specifically, it is easier to parse as a complete string
+	// rather than as individual arguments. So we will re-construct the string from args.
+
+	int req_len = 0;
+	for(int i=1; i<=c->argc; i++)
+		req_len += strlen(c->argv.arr[i]) + 1; // +1 for whitespace
+	req_len++; // Null char
+
+	// Reconstruct string
+	string buf = malloc(sizeof(char)*req_len + 1024);
+	strcpy(buf, c->argv.arr[1]);
+	for(int i=2; i<=c->argc; i++){
+		strcat(buf, " ");
+		strcat(buf, c->argv.arr[i]);
+	}
+
+	// Parse arguments
+	int interval, period;
+	if(__parse_replay_args(buf, &interval, &period) == -1){
+		throw_error(BAD_PARSE); return -1;
+	}
+
+	// I/O redirection for command will get stored in c. Append to the command we will run instead.
+	if(c->infile){
+		strcat(buf, " < ");
+		strcat(buf, c->infile);
+	}
+	if(c->outfile){
+		if(c->append) strcat(buf, " >> ");
+		else strcat(buf, " > ");
+		strcat(buf, c->outfile);
+	}
+
+	// Repeat the command
+	for(int t=interval; t<=period; t+=interval){
+		sleep(interval);
+		parse(buf);
+	}
+
+	// Cleanup
+	free(buf);
+	return 0;
 }
 
 /**
@@ -43,21 +180,21 @@ int fg(Command *c){
 	// Bad args if command wasn't given exactly one argument.
 	// Usage `fg <job_number>`
 	if(c->argc != 1){
-		throw_error(BAD_ARGS); // Handle errors
+		throw_error(TOO_LESS_ARGS);
 		return -1;
 	}
 
 	// Parse job number to int from args
 	int64_t job_num = string_to_int(c->argv.arr[1]);
 	if(job_num==-1){
-		throw_error(BAD_ARGS); // Handle errors
+		throw_error(BAD_ARGS);
 		return -1;
 	}
 
 	// Get process id from the given job number
 	pid_t pid = get_process_id(job_num, &(KSH.plist.head));
 	if(pid == -1){
-		printf("Process with job number %ld does not exist.\n", job_num); // Handle errors
+		printf("Process with job number %ld does not exist.\n", job_num);
 		return -1;
 	}
 

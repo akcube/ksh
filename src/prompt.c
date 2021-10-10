@@ -11,7 +11,7 @@ int getline_pt;
  */
 void disableRawMode() {
     if (tcsetattr(0, TCSAFLUSH, &orig_termios) == -1)
-        throw_fatal_perror("tcsetattr");
+        exit(0);
 }
 
 /**

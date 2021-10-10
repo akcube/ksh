@@ -7,6 +7,9 @@
  */
 int setup_redirection(Command *c){
 
+	// Special case, replay does not require this
+	if(!strcmp(c->name, "replay")) return 0;
+
 	// Required flags for i/o redirection
 	int r_flags = O_RDONLY;
 	int w_flags = O_WRONLY | O_CREAT | ((c->append)?O_APPEND:O_TRUNC);
@@ -44,37 +47,48 @@ void cleanup_redirection(){
 	}
 }
 
+/**
+ * @brief Executes all commands in a pipe and sets up the fd pipes to one another
+ * 
+ * @return 0 on success, -1 on failure
+ */
 int exec_pipe(Pipe *p){
 	
+	// Init holder vars
 	int x = 0;
 	int pfds[2][2];
 
+	// Save stdin and stdout for later
 	int ifd = dup(STDIN_FILENO);
 	int ofd = dup(STDOUT_FILENO);
-	int dummy;
+	int status;
 
-	if(check_perror("Pipe", pipe(pfds[x]), -1)) dummy=-1;
-	if(check_perror("Pipe", dup2(pfds[x][WRITE_END], STDOUT_FILENO), -1)) dummy=-1;
+	// Create the first pipe and make stdout refer to pipe write
+	if(check_perror("Pipe", pipe(pfds[x]), -1)) status=-1;
+	if(check_perror("Pipe", dup2(pfds[x][WRITE_END], STDOUT_FILENO), -1)) status=-1;
 	execute(p->c);
-	if(check_perror("Pipe", close(pfds[x][WRITE_END]), -1)) dummy=-1;
+	if(check_perror("Pipe", close(pfds[x][WRITE_END]), -1)) status=-1;
 
+	// For every in between command, make it read from previous commands write end
+	// and write to its own pipe write end. Close once used.
 	for(p = p->next, x ^= 1; p->next; p = p->next, x ^= 1){
-		if(check_perror("Pipe", pipe(pfds[x]), -1)) dummy=-1;
-		if(check_perror("Pipe", dup2(pfds[x^1][READ_END], STDIN_FILENO), -1)) dummy=-1;
-		if(check_perror("Pipe", dup2(pfds[x][WRITE_END], STDOUT_FILENO), -1)) dummy=-1;
+		if(check_perror("Pipe", pipe(pfds[x]), -1)) status=-1;
+		if(check_perror("Pipe", dup2(pfds[x^1][READ_END], STDIN_FILENO), -1)) status=-1;
+		if(check_perror("Pipe", dup2(pfds[x][WRITE_END], STDOUT_FILENO), -1)) status=-1;
 		execute(p->c);
-		if(check_perror("Pipe", close(pfds[x^1][READ_END]), -1)) dummy=-1;
-		if(check_perror("Pipe", close(pfds[x][WRITE_END]), -1)) dummy=-1;
+		if(check_perror("Pipe", close(pfds[x^1][READ_END]), -1)) status=-1;
+		if(check_perror("Pipe", close(pfds[x][WRITE_END]), -1)) status=-1;
 	}
 
-	if(check_perror("Pipe", dup2(pfds[x^1][READ_END], STDIN_FILENO), -1)) dummy=-1;
-	if(check_perror("Pipe", dup2(ofd, STDOUT_FILENO), -1)) dummy=-1;
+	// Last command of the pipe. Read from previous commands write end and write to stdout.
+	// If restoring stdin or stdout fails, throw fatal error and exit.
+	if(check_perror("Pipe", dup2(pfds[x^1][READ_END], STDIN_FILENO), -1)) status=-1;
+	check_fatal_perror("Pipe", dup2(ofd, STDOUT_FILENO), -1);
 	execute(p->c);
-	if(check_perror("Pipe", close(pfds[x^1][READ_END]), -1)) dummy=-1;
-	if(check_perror("Pipe", dup2(ifd, STDIN_FILENO), -1)) dummy=-1;
+	if(check_perror("Pipe", close(pfds[x^1][READ_END]), -1)) status=-1;
+	check_fatal_perror("Pipe", dup2(ifd, STDIN_FILENO), -1);
 
-
-	return dummy;
+	return status;
 }
 
 /**
