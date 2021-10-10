@@ -110,6 +110,9 @@ int execute(Command *c){
 			throw_fatal_error(EXEC_FAIL);
 		}
 		else{
+			// Add background process to list of all open processes
+			insert_process(pid, c->name, &(KSH.plist.head));
+
         	// Run process
 			// If foreground process
 			if(!c->runInBackground){
@@ -125,6 +128,14 @@ int execute(Command *c){
 				// Wait for termination
 				waitpid(pid, &status, WUNTRACED);
 
+				// If it was suspended, don't remove from proc list
+				if(WIFSTOPPED(status)) status = WSTOPSIG(status);
+				// If it was terminated, remove from proc list and return appropriate status
+				else if(WIFEXITED(status) || WIFSIGNALED(status)){
+					remove_process(pid, &(KSH.plist.head));
+					status = (WIFEXITED(status)) ? WEXITSTATUS(status) : WTERMSIG(status);
+				}
+				
 				// Set parent back to foreground process gid
 				tcsetpgrp(STDIN_FILENO, getpgid(0));	
 
@@ -134,11 +145,8 @@ int execute(Command *c){
 			}
 			else{
 				if(c->runInBackground) printf("%d\n", pid);
-				// Add background process to list of open background processes
-				insert_process(pid, c->name, &(KSH.plist.head));
 			}
 		}
-		status = 1;
 	}
 	else{
 		status = exec_builtin(c);

@@ -16,7 +16,6 @@ void setup_sighandler(int SIG, void (*handler)(int, siginfo_t*, void*)){
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags =  SA_RESTART | SA_SIGINFO;
 	check_fatal_perror("Signal handler", sigaction(SIG, &sa, NULL), -1);
-
 }
 
 // -------------------------------- Util functions --------------------------------
