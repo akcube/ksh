@@ -1,12 +1,18 @@
 # ksh
 
-It's a shell
+It's a shell written in C.
 
-## Usage
+## Requirements 
 
-1. `Make` & `gcc` must be installed on the machine
-2. Run `make` to compile the program. 
-3. Run with `./shell`
+`cmake`, `make` and `gcc` are required to build and run ksh.
+
+## Installation instructions
+
+1. Clone the repo with `git clone git@github.com:akcube/ksh.git`.
+2. `cd` into the cloned directory `cd ksh`.
+3. Make a build directory and `cd` into it. `mkdir build && cd build`.
+4. Run `cmake .. && make -j` to build the binaries.
+5. You can now run the shell with `./bin/ksh`.
 
 ## Assumptions
 
